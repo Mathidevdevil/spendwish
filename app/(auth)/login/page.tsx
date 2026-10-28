@@ -25,17 +25,26 @@ function LoginForm() {
   const [demoLoading, setDemoLoading] = useState(false);
   const supabase = createClient();
 
-  const handleDemoLogin = async () => {
+  const handleDemoLogin = async (customEmail?: string, customName?: string) => {
     try {
       setDemoLoading(true);
-      enableDemoMode();
-      await fetch("/api/auth/demo-session", { method: "POST" });
-      toast.success("Welcome to Spendwise! Logged in with Demo Account.");
-      router.push(redirect);
-      router.refresh();
+      const email = typeof customEmail === "string" && customEmail.includes("@")
+        ? customEmail
+        : "demo@spendwise.app";
+      const name = typeof customName === "string" && customName.length > 0
+        ? customName
+        : "Aarav Sharma";
+
+      enableDemoMode(email, name);
+      await fetch("/api/auth/demo-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name }),
+      });
+      toast.success("Welcome to Spendwise! Logged in successfully.");
+      window.location.href = redirect;
     } catch {
-      toast.error("Failed to start demo session");
-    } finally {
+      toast.error("Failed to start session");
       setDemoLoading(false);
     }
   };
@@ -56,25 +65,43 @@ function LoginForm() {
     try {
       setLoading(true);
 
-      const isPlaceholderUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("spendwise-demo.supabase.co");
+      const isPlaceholderUrl =
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("spendwise-demo.supabase.co") ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
       const isDemoAccount = data.email.toLowerCase() === "demo@spendwise.app";
 
       // If Supabase credentials are placeholder or demo email is used, enter demo mode
       if (isPlaceholderUrl || isDemoAccount) {
-        await handleDemoLogin();
+        await handleDemoLogin(data.email, data.email.split("@")[0]);
         return;
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      // Safe sign-in with 3.5s timeout to prevent UI freeze
+      const signInPromise = supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
+      const timeoutPromise = new Promise<{ error: any }>((resolve) =>
+        setTimeout(
+          () => resolve({ error: { message: "Network timeout connecting to backend", status: 0 } }),
+          3500
+        )
+      );
+
+      const { error } = await Promise.race([signInPromise, timeoutPromise]);
+
       if (error) {
-        // Fallback to demo mode if network error connecting to unconfigured backend
-        if (error.message.includes("fetch") || error.message.includes("network") || error.status === 0) {
-          toast.info("Supabase backend not reachable. Entering Demo Mode...");
-          await handleDemoLogin();
+        // Fallback to demo session if network error or unconfigured backend
+        if (
+          error.message?.includes("fetch") ||
+          error.message?.includes("network") ||
+          error.message?.includes("timeout") ||
+          error.status === 0
+        ) {
+          toast.info("Entering Demo Mode session for " + data.email);
+          await handleDemoLogin(data.email, data.email.split("@")[0]);
           return;
         }
         toast.error(error.message);
@@ -82,12 +109,10 @@ function LoginForm() {
       }
 
       toast.success("Welcome back!");
-      router.push(redirect);
-      router.refresh();
-    } catch (err: any) {
-      // In case of unhandled fetch failure, fallback gracefully to demo mode
-      toast.info("Supabase backend not reachable. Entering Demo Mode...");
-      await handleDemoLogin();
+      window.location.href = redirect;
+    } catch {
+      toast.info("Entering Demo Mode session...");
+      await handleDemoLogin(data.email, data.email.split("@")[0]);
     } finally {
       setLoading(false);
     }
@@ -99,7 +124,7 @@ function LoginForm() {
       <Button
         type="button"
         variant="outline"
-        onClick={handleDemoLogin}
+        onClick={() => handleDemoLogin()}
         disabled={demoLoading || loading}
         className="w-full h-11 border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
       >

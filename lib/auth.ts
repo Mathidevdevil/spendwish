@@ -32,11 +32,24 @@ export async function getCurrentUser() {
     };
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  if (
+    supabaseUrl.includes("spendwise-demo.supabase.co") ||
+    supabaseUrl.includes("placeholder") ||
+    supabaseKey.includes("demo-anon-key")
+  ) {
+    return null;
+  }
+
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const getUserPromise = supabase.auth.getUser();
+    const timeoutPromise = new Promise<{ data: { user: null } }>((resolve) =>
+      setTimeout(() => resolve({ data: { user: null } }), 2000)
+    );
+    const { data } = await Promise.race([getUserPromise, timeoutPromise]);
+    const user = data.user;
 
     if (!user) {
       return null;

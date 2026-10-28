@@ -44,6 +44,8 @@ export function TripItemDialog({
   });
 
   useEffect(() => {
+    if (!open) return;
+
     if (initialData) {
       form.reset({
         id: initialData.id,
@@ -64,7 +66,7 @@ export function TripItemDialog({
         notes: "",
       });
     }
-  }, [initialData, tripId, defaultDate, form]);
+  }, [open, initialData, tripId]);
 
   const onSubmit = async (data: TripItemFormInput) => {
     try {

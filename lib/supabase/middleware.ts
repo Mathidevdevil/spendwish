@@ -77,7 +77,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   // If using placeholder/demo Supabase URL, do not attempt to contact non-existent endpoint
-  const isPlaceholderUrl = supabaseUrl.includes("spendwise-demo.supabase.co");
+  const isPlaceholderUrl =
+    supabaseUrl.includes("spendwise-demo.supabase.co") ||
+    supabaseUrl.includes("placeholder") ||
+    supabaseAnonKey.includes("demo-anon-key");
+
   if (isPlaceholderUrl) {
     if (!isPublicRoute) {
       const url = request.nextUrl.clone();
@@ -90,7 +94,11 @@ export async function updateSession(request: NextRequest) {
 
   let user = null;
   try {
-    const { data } = await supabase.auth.getUser();
+    const getUserPromise = supabase.auth.getUser();
+    const timeoutPromise = new Promise<{ data: { user: null } }>((resolve) =>
+      setTimeout(() => resolve({ data: { user: null } }), 2000)
+    );
+    const { data } = await Promise.race([getUserPromise, timeoutPromise]);
     user = data.user;
   } catch {
     user = null;

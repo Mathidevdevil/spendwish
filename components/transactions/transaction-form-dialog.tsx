@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -131,8 +131,9 @@ export function TransactionFormDialog({
     }
   }, [initialData, form]);
 
-  const filteredCategories = categories.filter(
-    (c) => c.type === selectedType
+  const filteredCategories = useMemo(
+    () => categories.filter((c) => c.type === selectedType),
+    [categories, selectedType]
   );
 
   const onSubmit = async (data: TransactionFormInput) => {

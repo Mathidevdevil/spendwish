@@ -78,9 +78,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const month = Number(body.month) || new Date().getMonth() + 1;
-    const year = Number(body.year) || new Date().getFullYear();
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {}
+    const month = Number(body?.month) || new Date().getMonth() + 1;
+    const year = Number(body?.year) || new Date().getFullYear();
 
     // Check if demo user
     let summary: any;

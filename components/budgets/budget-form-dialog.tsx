@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -40,8 +40,10 @@ export function BudgetFormDialog({
   const { currency } = useCurrency();
   const saveMutation = useSaveBudget();
 
-  // Only expense categories can be budgeted
-  const expenseCategories = categories.filter((c) => c.type === "expense");
+  const expenseCategories = useMemo(
+    () => categories.filter((c) => c.type === "expense"),
+    [categories]
+  );
 
   const form = useForm<BudgetFormInput>({
     resolver: zodResolver(budgetFormSchema),
@@ -54,6 +56,8 @@ export function BudgetFormDialog({
   });
 
   useEffect(() => {
+    if (!open) return;
+
     if (initialData) {
       form.reset({
         id: initialData.id,
@@ -70,7 +74,7 @@ export function BudgetFormDialog({
         year,
       });
     }
-  }, [initialData, month, year, form, expenseCategories]);
+  }, [open, initialData, month, year]);
 
   const onSubmit = async (data: BudgetFormInput) => {
     try {

@@ -58,8 +58,17 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadUser() {
       if (isDemoMode()) {
-        setEmail("demo@spendwise.app");
-        setFullName("Aarav Sharma");
+        const emailCookie = document.cookie
+          .split("; ")
+          .find((r) => r.startsWith("spendwise_user_email="))
+          ?.split("=")[1];
+        const nameCookie = document.cookie
+          .split("; ")
+          .find((r) => r.startsWith("spendwise_user_name="))
+          ?.split("=")[1];
+
+        setEmail(emailCookie ? decodeURIComponent(emailCookie) : "demo@spendwise.app");
+        setFullName(nameCookie ? decodeURIComponent(nameCookie) : "Aarav Sharma");
         return;
       }
 
@@ -85,7 +94,8 @@ export default function SettingsPage() {
       } catch {}
     }
     loadUser();
-  }, [supabase, setCurrency]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();

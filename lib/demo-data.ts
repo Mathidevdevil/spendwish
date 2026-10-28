@@ -27,12 +27,15 @@ export function isDemoMode(): boolean {
   return Boolean(isDemoUrl || hasDemoCookie || hasDemoStorage);
 }
 
-export function enableDemoMode() {
+export function enableDemoMode(
+  email: string = "demo@spendwise.app",
+  name: string = "Aarav Sharma"
+) {
   if (typeof window !== "undefined") {
     localStorage.setItem("spendwise_demo_session", "true");
     document.cookie = "spendwise_demo_session=true; path=/; max-age=2592000; SameSite=Lax";
-    document.cookie = "spendwise_user_email=demo@spendwise.app; path=/; max-age=2592000; SameSite=Lax";
-    document.cookie = "spendwise_user_name=Aarav Sharma; path=/; max-age=2592000; SameSite=Lax";
+    document.cookie = `spendwise_user_email=${encodeURIComponent(email)}; path=/; max-age=2592000; SameSite=Lax`;
+    document.cookie = `spendwise_user_name=${encodeURIComponent(name)}; path=/; max-age=2592000; SameSite=Lax`;
   }
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Wallet } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
@@ -11,6 +12,32 @@ interface TopNavProps {
 }
 
 export function TopNav({ userEmail, userName }: TopNavProps) {
+  const [resolvedEmail, setResolvedEmail] = useState<string | null>(userEmail || null);
+  const [resolvedName, setResolvedName] = useState<string | null>(userName || null);
+
+  useEffect(() => {
+    if (userEmail) setResolvedEmail(userEmail);
+    if (userName) setResolvedName(userName);
+
+    if (!userEmail || !userName) {
+      const emailCookie = document.cookie
+        .split("; ")
+        .find((r) => r.startsWith("spendwise_user_email="))
+        ?.split("=")[1];
+      const nameCookie = document.cookie
+        .split("; ")
+        .find((r) => r.startsWith("spendwise_user_name="))
+        ?.split("=")[1];
+
+      if (!userEmail && emailCookie) {
+        setResolvedEmail(decodeURIComponent(emailCookie));
+      }
+      if (!userName && nameCookie) {
+        setResolvedName(decodeURIComponent(nameCookie));
+      }
+    }
+  }, [userEmail, userName]);
+
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/80 px-4 md:px-8 backdrop-blur-md">
       {/* Mobile brand header */}
@@ -32,7 +59,7 @@ export function TopNav({ userEmail, userName }: TopNavProps) {
 
       <div className="flex items-center gap-2 sm:gap-3">
         <ThemeToggle />
-        <UserMenu email={userEmail} name={userName} />
+        <UserMenu email={resolvedEmail} name={resolvedName} />
       </div>
     </header>
   );

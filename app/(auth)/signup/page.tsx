@@ -23,17 +23,26 @@ export default function SignUpPage() {
   const [demoLoading, setDemoLoading] = useState(false);
   const supabase = createClient();
 
-  const handleDemoLogin = async () => {
+  const handleDemoLogin = async (customEmail?: string, customName?: string) => {
     try {
       setDemoLoading(true);
-      enableDemoMode();
-      await fetch("/api/auth/demo-session", { method: "POST" });
-      toast.success("Welcome to Spendwise! Logged in with Demo Account.");
-      router.push("/");
-      router.refresh();
+      const email = typeof customEmail === "string" && customEmail.includes("@")
+        ? customEmail
+        : "demo@spendwise.app";
+      const name = typeof customName === "string" && customName.length > 0
+        ? customName
+        : "Aarav Sharma";
+
+      enableDemoMode(email, name);
+      await fetch("/api/auth/demo-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name }),
+      });
+      toast.success("Welcome to Spendwise! Logged in successfully.");
+      window.location.href = "/";
     } catch {
       toast.error("Failed to start demo session");
-    } finally {
       setDemoLoading(false);
     }
   };
@@ -55,14 +64,18 @@ export default function SignUpPage() {
     try {
       setLoading(true);
 
-      const isPlaceholderUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("spendwise-demo.supabase.co");
+      const isPlaceholderUrl =
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("spendwise-demo.supabase.co") ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
+
       if (isPlaceholderUrl) {
-        toast.info("Supabase database not configured. Entering Demo Mode...");
-        await handleDemoLogin();
+        toast.info("Entering Demo Mode session for " + data.fullName);
+        await handleDemoLogin(data.email, data.fullName);
         return;
       }
 
-      const { data: authData, error } = await supabase.auth.signUp({
+      const signUpPromise = supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -72,29 +85,45 @@ export default function SignUpPage() {
         },
       });
 
+      const timeoutPromise = new Promise<{ data: any; error: any }>((resolve) =>
+        setTimeout(
+          () => resolve({ data: null, error: { message: "timeout", status: 0 } }),
+          3500
+        )
+      );
+
+      const { data: authData, error } = (await Promise.race([
+        signUpPromise,
+        timeoutPromise,
+      ])) as any;
+
       if (error) {
-        if (error.message.includes("fetch") || error.message.includes("network") || error.status === 0) {
+        if (
+          error.message?.includes("fetch") ||
+          error.message?.includes("network") ||
+          error.message === "timeout" ||
+          error.status === 0
+        ) {
           toast.info("Supabase backend not reachable. Entering Demo Mode...");
-          await handleDemoLogin();
+          await handleDemoLogin(data.email, data.fullName);
           return;
         }
         toast.error(error.message);
         return;
       }
 
-      if (authData.session) {
+      if (authData?.session) {
         toast.success("Account created successfully!");
-        router.push("/");
-        router.refresh();
+        window.location.href = "/";
       } else {
         toast.success(
           "Confirmation email sent! Please check your inbox to activate your account."
         );
-        router.push("/login");
+        window.location.href = "/login";
       }
     } catch {
       toast.info("Supabase backend not reachable. Entering Demo Mode...");
-      await handleDemoLogin();
+      await handleDemoLogin(data.email, data.fullName);
     } finally {
       setLoading(false);
     }
@@ -110,7 +139,7 @@ export default function SignUpPage() {
         <Button
           type="button"
           variant="outline"
-          onClick={handleDemoLogin}
+          onClick={() => handleDemoLogin()}
           disabled={demoLoading || loading}
           className="w-full h-11 border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
         >

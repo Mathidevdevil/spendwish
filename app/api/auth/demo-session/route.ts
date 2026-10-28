@@ -1,12 +1,21 @@
 import { NextResponse } from "next/server";
 
-export async function POST() {
+export async function POST(request: Request) {
+  let email = "demo@spendwise.app";
+  let fullName = "Aarav Sharma";
+
+  try {
+    const body = await request.json();
+    if (body?.email) email = String(body.email);
+    if (body?.name) fullName = String(body.name);
+  } catch {}
+
   const response = NextResponse.json({
     success: true,
     user: {
       id: "00000000-0000-0000-0000-000000000001",
-      email: "demo@spendwise.app",
-      full_name: "Aarav Sharma",
+      email,
+      full_name: fullName,
     },
   });
 
@@ -18,14 +27,14 @@ export async function POST() {
     maxAge: 60 * 60 * 24 * 30, // 30 days
   });
 
-  response.cookies.set("spendwise_user_email", "demo@spendwise.app", {
+  response.cookies.set("spendwise_user_email", email, {
     path: "/",
     httpOnly: false,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 30,
   });
 
-  response.cookies.set("spendwise_user_name", "Aarav Sharma", {
+  response.cookies.set("spendwise_user_name", fullName, {
     path: "/",
     httpOnly: false,
     sameSite: "lax",

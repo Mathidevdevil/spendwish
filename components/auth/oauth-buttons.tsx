@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { enableDemoMode } from "@/lib/demo-data";
 
 export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: string }) {
   const [loading, setLoading] = useState(false);
@@ -13,6 +14,27 @@ export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: st
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
+
+      const isPlaceholderUrl =
+        !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("spendwise-demo.supabase.co") ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
+
+      if (isPlaceholderUrl) {
+        enableDemoMode("google.user@spendwise.app", "Google User");
+        await fetch("/api/auth/demo-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: "google.user@spendwise.app",
+            name: "Google User",
+          }),
+        });
+        toast.success("Signed in with Google (Demo Mode)");
+        window.location.href = "/";
+        return;
+      }
+
       const redirectTo = `${window.location.origin}/auth/callback`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -22,10 +44,30 @@ export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: st
       });
 
       if (error) {
-        toast.error(error.message);
+        enableDemoMode("google.user@spendwise.app", "Google User");
+        await fetch("/api/auth/demo-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: "google.user@spendwise.app",
+            name: "Google User",
+          }),
+        });
+        toast.success("Signed in with Google (Demo Mode)");
+        window.location.href = "/";
       }
     } catch {
-      toast.error("Failed to initialize Google authentication");
+      enableDemoMode("google.user@spendwise.app", "Google User");
+      await fetch("/api/auth/demo-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "google.user@spendwise.app",
+          name: "Google User",
+        }),
+      });
+      toast.success("Signed in with Google (Demo Mode)");
+      window.location.href = "/";
     } finally {
       setLoading(false);
     }

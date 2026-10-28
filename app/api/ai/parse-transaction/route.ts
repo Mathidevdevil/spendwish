@@ -96,8 +96,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
-    const prompt = (body.prompt || "").trim();
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {}
+    const prompt = (body?.prompt || "").trim();
 
     if (!prompt) {
       return NextResponse.json(
