@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     "/signup",
     "/forgot-password",
     "/auth/callback",
+    "/auth/reset-password",
     "/manifest.webmanifest",
   ];
   const isPublicRoute = publicRoutes.some((route) =>
@@ -60,7 +61,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicRoute && request.nextUrl.pathname !== "/auth/callback") {
+  if (user && isPublicRoute && !request.nextUrl.pathname.startsWith("/auth")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
