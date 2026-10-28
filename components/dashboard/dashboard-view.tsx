@@ -15,6 +15,7 @@ import { MonthYearPicker } from "./month-year-picker";
 import { SummaryCards } from "./summary-cards";
 import { RecentTransactions } from "./recent-transactions";
 import { DashboardBudgetProgress } from "./dashboard-budget-progress";
+import { AiInsightsCard } from "./ai-insights-card";
 import { useDashboardData } from "@/hooks/use-dashboard";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useBudgets } from "@/hooks/use-budgets";
@@ -97,6 +98,9 @@ export function DashboardView() {
 
       {/* KPI Cards: Total Income, Total Expense, Net Savings, Savings Rate % */}
       <SummaryCards summary={summary} isLoading={isLoading} />
+
+      {/* AI Financial Insights Widget */}
+      <AiInsightsCard month={selectedMonth} year={selectedYear} />
 
       {/* Charts Grid: Donut + 6-Month Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
