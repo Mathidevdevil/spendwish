@@ -3,6 +3,7 @@ import { DesktopSidebar } from "./desktop-sidebar";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { TopNav } from "./top-nav";
 import { QuickAddButton } from "./quick-add-button";
+import { TransactionFormDialog } from "@/components/transactions/transaction-form-dialog";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -24,6 +25,7 @@ export function AppShell({ children, userEmail, userName }: AppShellProps) {
 
         <QuickAddButton />
         <MobileBottomNav />
+        <TransactionFormDialog />
       </div>
     </div>
   );
