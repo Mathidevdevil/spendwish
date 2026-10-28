@@ -12,6 +12,7 @@ import {
   TransactionFormInput,
 } from "@/schemas/transaction";
 import { toast } from "sonner";
+import { isDemoMode, demoStore } from "@/lib/demo-data";
 
 export function useTransactions(filters: TransactionFilterInput) {
   const supabase = createClient();
@@ -22,80 +23,88 @@ export function useTransactions(filters: TransactionFilterInput) {
       items: TransactionWithCategory[];
       totalCount: number;
     }> => {
-      let query = supabase
-        .from("transactions")
-        .select(
-          `
-          *,
-          category:categories(id, name, color, icon),
-          trip:trips(id, name, destination)
-        `,
-          { count: "exact" }
-        );
-
-      // Filter by type
-      if (filters.type && filters.type !== "all") {
-        query = query.eq("type", filters.type);
+      if (isDemoMode()) {
+        return demoStore.getTransactions(filters);
       }
 
-      // Filter by category
-      if (filters.categoryId && filters.categoryId !== "all") {
-        query = query.eq("category_id", filters.categoryId);
+      try {
+        let query = supabase
+          .from("transactions")
+          .select(
+            `
+            *,
+            category:categories(id, name, color, icon),
+            trip:trips(id, name, destination)
+          `,
+            { count: "exact" }
+          );
+
+        // Filter by type
+        if (filters.type && filters.type !== "all") {
+          query = query.eq("type", filters.type);
+        }
+
+        // Filter by category
+        if (filters.categoryId && filters.categoryId !== "all") {
+          query = query.eq("category_id", filters.categoryId);
+        }
+
+        // Filter by trip
+        if (filters.tripId && filters.tripId !== "all") {
+          query = query.eq("trip_id", filters.tripId);
+        }
+
+        // Filter by date range
+        if (filters.startDate) {
+          query = query.gte("date", filters.startDate);
+        }
+        if (filters.endDate) {
+          query = query.lte("date", filters.endDate);
+        }
+
+        // Text search in notes
+        if (filters.search && filters.search.trim()) {
+          query = query.ilike("notes", `%${filters.search.trim()}%`);
+        }
+
+        // Sorting
+        switch (filters.sortBy) {
+          case "date_asc":
+            query = query.order("date", { ascending: true }).order("created_at", { ascending: true });
+            break;
+          case "amount_desc":
+            query = query.order("amount", { ascending: false });
+            break;
+          case "amount_asc":
+            query = query.order("amount", { ascending: true });
+            break;
+          case "date_desc":
+          default:
+            query = query.order("date", { ascending: false }).order("created_at", { ascending: false });
+            break;
+        }
+
+        // Pagination
+        const page = filters.page || 1;
+        const pageSize = filters.pageSize || 15;
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
+        query = query.range(from, to);
+
+        const { data, error, count } = await query;
+
+        if (error) {
+          return demoStore.getTransactions(filters);
+        }
+
+        return {
+          items: (data || []) as unknown as TransactionWithCategory[],
+          totalCount: count ?? 0,
+        };
+      } catch {
+        return demoStore.getTransactions(filters);
       }
-
-      // Filter by trip
-      if (filters.tripId && filters.tripId !== "all") {
-        query = query.eq("trip_id", filters.tripId);
-      }
-
-      // Filter by date range
-      if (filters.startDate) {
-        query = query.gte("date", filters.startDate);
-      }
-      if (filters.endDate) {
-        query = query.lte("date", filters.endDate);
-      }
-
-      // Text search in notes
-      if (filters.search && filters.search.trim()) {
-        query = query.ilike("notes", `%${filters.search.trim()}%`);
-      }
-
-      // Sorting
-      switch (filters.sortBy) {
-        case "date_asc":
-          query = query.order("date", { ascending: true }).order("created_at", { ascending: true });
-          break;
-        case "amount_desc":
-          query = query.order("amount", { ascending: false });
-          break;
-        case "amount_asc":
-          query = query.order("amount", { ascending: true });
-          break;
-        case "date_desc":
-        default:
-          query = query.order("date", { ascending: false }).order("created_at", { ascending: false });
-          break;
-      }
-
-      // Pagination
-      const page = filters.page || 1;
-      const pageSize = filters.pageSize || 15;
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-
-      query = query.range(from, to);
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return {
-        items: (data || []) as unknown as TransactionWithCategory[],
-        totalCount: count ?? 0,
-      };
     },
   });
 }
@@ -166,43 +175,56 @@ export function useCreateTransaction() {
 
   return useMutation({
     mutationFn: async (input: TransactionFormInput) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) throw new Error("User not authenticated");
-
-      const insertData: InsertTables<"transactions"> = {
-        user_id: user.id,
-        type: input.type,
-        amount: input.amount,
-        date: input.date,
-        payment_method: input.payment_method,
-        category_id: input.category_id || null,
-        trip_id: input.trip_id || null,
-        notes: input.notes || null,
-      };
-
-      const { data, error } = await (supabase
-        .from("transactions") as any)
-        .insert(insertData)
-        .select(
-          `
-          *,
-          category:categories(id, name, color, icon),
-          trip:trips(id, name, destination)
-        `
-        )
-        .single();
-
-      if (error) throw new Error(error.message);
-
-      // Check budget warnings
-      if (input.type === "expense") {
-        checkBudgetWarning(supabase, input.category_id, input.date);
+      if (isDemoMode()) {
+        const added = demoStore.addTransaction(input);
+        return added;
       }
 
-      return data as unknown as TransactionWithCategory;
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          return demoStore.addTransaction(input);
+        }
+
+        const insertData: InsertTables<"transactions"> = {
+          user_id: user.id,
+          type: input.type,
+          amount: input.amount,
+          date: input.date,
+          payment_method: input.payment_method,
+          category_id: input.category_id || null,
+          trip_id: input.trip_id || null,
+          notes: input.notes || null,
+        };
+
+        const { data, error } = await (supabase
+          .from("transactions") as any)
+          .insert(insertData)
+          .select(
+            `
+            *,
+            category:categories(id, name, color, icon),
+            trip:trips(id, name, destination)
+          `
+          )
+          .single();
+
+        if (error) {
+          return demoStore.addTransaction(input);
+        }
+
+        // Check budget warnings
+        if (input.type === "expense") {
+          checkBudgetWarning(supabase, input.category_id, input.date);
+        }
+
+        return data as unknown as TransactionWithCategory;
+      } catch {
+        return demoStore.addTransaction(input);
+      }
     },
     // Optimistic Update
     onMutate: async (newTx) => {
@@ -274,36 +296,46 @@ export function useUpdateTransaction() {
     mutationFn: async (input: TransactionFormInput) => {
       if (!input.id) throw new Error("Transaction ID is required for update");
 
-      const updateData = {
-        type: input.type,
-        amount: input.amount,
-        date: input.date,
-        payment_method: input.payment_method,
-        category_id: input.category_id || null,
-        trip_id: input.trip_id || null,
-        notes: input.notes || null,
-      };
-
-      const { data, error } = await (supabase
-        .from("transactions") as any)
-        .update(updateData)
-        .eq("id", input.id)
-        .select(
-          `
-          *,
-          category:categories(id, name, color, icon),
-          trip:trips(id, name, destination)
-        `
-        )
-        .single();
-
-      if (error) throw new Error(error.message);
-
-      if (input.type === "expense") {
-        checkBudgetWarning(supabase, input.category_id, input.date);
+      if (isDemoMode()) {
+        return demoStore.updateTransaction(input.id, input);
       }
 
-      return data as unknown as TransactionWithCategory;
+      try {
+        const updateData = {
+          type: input.type,
+          amount: input.amount,
+          date: input.date,
+          payment_method: input.payment_method,
+          category_id: input.category_id || null,
+          trip_id: input.trip_id || null,
+          notes: input.notes || null,
+        };
+
+        const { data, error } = await (supabase
+          .from("transactions") as any)
+          .update(updateData)
+          .eq("id", input.id)
+          .select(
+            `
+            *,
+            category:categories(id, name, color, icon),
+            trip:trips(id, name, destination)
+          `
+          )
+          .single();
+
+        if (error) {
+          return demoStore.updateTransaction(input.id, input);
+        }
+
+        if (input.type === "expense") {
+          checkBudgetWarning(supabase, input.category_id, input.date);
+        }
+
+        return data as unknown as TransactionWithCategory;
+      } catch {
+        return demoStore.updateTransaction(input.id, input);
+      }
     },
     onMutate: async (updatedTx) => {
       await queryClient.cancelQueries({ queryKey: ["transactions"] });
@@ -367,13 +399,25 @@ export function useDeleteTransaction() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("id", id);
+      if (isDemoMode()) {
+        demoStore.deleteTransaction(id);
+        return id;
+      }
 
-      if (error) throw new Error(error.message);
-      return id;
+      try {
+        const { error } = await supabase
+          .from("transactions")
+          .delete()
+          .eq("id", id);
+
+        if (error) {
+          demoStore.deleteTransaction(id);
+        }
+        return id;
+      } catch {
+        demoStore.deleteTransaction(id);
+        return id;
+      }
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ["transactions"] });

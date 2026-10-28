@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, Sparkles, User } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { signUpSchema, type SignUpInput } from "@/schemas/auth";
@@ -14,12 +14,29 @@ import { GoogleOAuthButton } from "@/components/auth/oauth-buttons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { enableDemoMode } from "@/lib/demo-data";
 
 export default function SignUpPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const supabase = createClient();
+
+  const handleDemoLogin = async () => {
+    try {
+      setDemoLoading(true);
+      enableDemoMode();
+      await fetch("/api/auth/demo-session", { method: "POST" });
+      toast.success("Welcome to Spendwise! Logged in with Demo Account.");
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("Failed to start demo session");
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   const {
     register,
@@ -37,6 +54,14 @@ export default function SignUpPage() {
   const onSubmit = async (data: SignUpInput) => {
     try {
       setLoading(true);
+
+      const isPlaceholderUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("spendwise-demo.supabase.co");
+      if (isPlaceholderUrl) {
+        toast.info("Supabase database not configured. Entering Demo Mode...");
+        await handleDemoLogin();
+        return;
+      }
+
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -48,6 +73,11 @@ export default function SignUpPage() {
       });
 
       if (error) {
+        if (error.message.includes("fetch") || error.message.includes("network") || error.status === 0) {
+          toast.info("Supabase backend not reachable. Entering Demo Mode...");
+          await handleDemoLogin();
+          return;
+        }
         toast.error(error.message);
         return;
       }
@@ -63,7 +93,8 @@ export default function SignUpPage() {
         router.push("/login");
       }
     } catch {
-      toast.error("An unexpected error occurred during signup");
+      toast.info("Supabase backend not reachable. Entering Demo Mode...");
+      await handleDemoLogin();
     } finally {
       setLoading(false);
     }
@@ -75,7 +106,26 @@ export default function SignUpPage() {
       description="Track expenses, create monthly budgets, and manage your travel"
     >
       <div className="space-y-4">
-        <GoogleOAuthButton text="Sign up with Google" />
+        {/* Instant Demo Access Button */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleDemoLogin}
+          disabled={demoLoading || loading}
+          className="w-full h-11 border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
+        >
+          {demoLoading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              Loading demo workspace...
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
+              <span>Instant Demo Access (Skip Setup)</span>
+            </>
+          )}
+        </Button>
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -83,10 +133,12 @@ export default function SignUpPage() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-card px-2 text-muted-foreground font-medium">
-              Or sign up with email
+              Or sign up with credentials
             </span>
           </div>
         </div>
+
+        <GoogleOAuthButton text="Sign up with Google" />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">

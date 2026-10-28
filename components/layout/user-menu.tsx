@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Settings, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { disableDemoMode } from "@/lib/demo-data";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +28,11 @@ export function UserMenu({ email, name }: UserMenuProps) {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      disableDemoMode();
+      await fetch("/api/auth/demo-session", { method: "DELETE" }).catch(() => {});
+      try {
+        await supabase.auth.signOut();
+      } catch {}
       toast.success("Logged out successfully");
       router.push("/login");
       router.refresh();

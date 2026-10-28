@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Trip, TripItem, TransactionWithCategory } from "@/types/database";
 import { TripFormInput, TripItemFormInput } from "@/schemas/trip";
 import { toast } from "sonner";
+import { isDemoMode, demoStore } from "@/lib/demo-data";
 
 export interface TripWithSpend extends Trip {
   actual_spend: number;
@@ -21,59 +22,96 @@ export function useTrips(statusFilter: string = "all") {
   return useQuery({
     queryKey: ["trips", statusFilter],
     queryFn: async (): Promise<TripWithSpend[]> => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return [];
+      if (isDemoMode()) {
+        const trips = demoStore.getTrips();
+        const txs = demoStore.getTransactions({ page: 1, pageSize: 1000 }).items;
 
-      let query = supabase
-        .from("trips")
-        .select("*")
-        .order("start_date", { ascending: false });
+        const filtered = statusFilter && statusFilter !== "all"
+          ? trips.filter((t) => t.status === statusFilter)
+          : trips;
 
-      if (statusFilter && statusFilter !== "all") {
-        query = query.eq("status", statusFilter as any);
+        return filtered.map((t) => {
+          const actual_spend = txs
+            .filter((tx) => tx.trip_id === t.id && tx.type === "expense")
+            .reduce((sum, tx) => sum + Number(tx.amount), 0);
+          const total_budget = Number(t.total_budget) || 0;
+          const remaining_budget = total_budget - actual_spend;
+          const percent_budget_used =
+            total_budget > 0
+              ? Math.round((actual_spend / total_budget) * 10000) / 100
+              : 0;
+
+          return {
+            ...t,
+            actual_spend,
+            itinerary_estimated_cost: 0,
+            remaining_budget,
+            percent_budget_used,
+          };
+        });
       }
 
-      const { data: trips, error } = await query;
-      if (error) throw new Error(error.message);
-      const tripRows = (trips || []) as Trip[];
-      if (tripRows.length === 0) return [];
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return [];
 
-      // Calculate actual spend for each trip
-      const tripIds = tripRows.map((t) => t.id);
-      const { data: txs } = await supabase
-        .from("transactions")
-        .select("trip_id, amount")
-        .in("trip_id", tripIds)
-        .eq("type", "expense");
+        let query = supabase
+          .from("trips")
+          .select("*")
+          .order("start_date", { ascending: false });
 
-      const spendMap = new Map<string, number>();
-      const rows = (txs || []) as Array<{ trip_id: string | null; amount: number }>;
-      rows.forEach((tx) => {
-        if (tx.trip_id) {
-          const current = spendMap.get(tx.trip_id) || 0;
-          spendMap.set(tx.trip_id, current + Number(tx.amount));
+        if (statusFilter && statusFilter !== "all") {
+          query = query.eq("status", statusFilter as any);
         }
-      });
 
-      return tripRows.map((t) => {
-        const actual_spend = spendMap.get(t.id) || 0;
-        const total_budget = Number(t.total_budget) || 0;
-        const remaining_budget = total_budget - actual_spend;
-        const percent_budget_used =
-          total_budget > 0
-            ? Math.round((actual_spend / total_budget) * 10000) / 100
-            : 0;
+        const { data: trips, error } = await query;
+        if (error) {
+          const demoTrips = demoStore.getTrips();
+          return demoTrips as any;
+        }
+        const tripRows = (trips || []) as Trip[];
+        if (tripRows.length === 0) return [];
 
-        return {
-          ...t,
-          actual_spend,
-          itinerary_estimated_cost: 0,
-          remaining_budget,
-          percent_budget_used,
-        };
-      });
+        // Calculate actual spend for each trip
+        const tripIds = tripRows.map((t) => t.id);
+        const { data: txs } = await supabase
+          .from("transactions")
+          .select("trip_id, amount")
+          .in("trip_id", tripIds)
+          .eq("type", "expense");
+
+        const spendMap = new Map<string, number>();
+        const rows = (txs || []) as Array<{ trip_id: string | null; amount: number }>;
+        rows.forEach((tx) => {
+          if (tx.trip_id) {
+            const current = spendMap.get(tx.trip_id) || 0;
+            spendMap.set(tx.trip_id, current + Number(tx.amount));
+          }
+        });
+
+        return tripRows.map((t) => {
+          const actual_spend = spendMap.get(t.id) || 0;
+          const total_budget = Number(t.total_budget) || 0;
+          const remaining_budget = total_budget - actual_spend;
+          const percent_budget_used =
+            total_budget > 0
+              ? Math.round((actual_spend / total_budget) * 10000) / 100
+              : 0;
+
+          return {
+            ...t,
+            actual_spend,
+            itinerary_estimated_cost: 0,
+            remaining_budget,
+            percent_budget_used,
+          };
+        });
+      } catch {
+        const demoTrips = demoStore.getTrips();
+        return demoTrips as any;
+      }
     },
   });
 }
@@ -88,75 +126,128 @@ export function useTripDetail(tripId: string) {
       expenses: TransactionWithCategory[];
       itinerary: TripItem[];
     }> => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (isDemoMode()) {
+        const trip = demoStore.getTripById(tripId) || demoStore.getTrips()[0];
+        const itinerary = demoStore.getTripItems(trip.id);
+        const expenses = demoStore.getTransactions({ tripId: trip.id, page: 1, pageSize: 1000 }).items;
 
-      // 1. Fetch Trip
-      const { data: trip, error: tripErr } = await supabase
-        .from("trips")
-        .select("*")
-        .eq("id", tripId)
-        .single();
+        const actual_spend = expenses.reduce(
+          (sum, t) => (t.type === "expense" ? sum + Number(t.amount) : sum),
+          0
+        );
 
-      const tripRow = trip as Trip | null;
-      if (tripErr || !tripRow) throw new Error(tripErr?.message || "Trip not found");
+        const itinerary_estimated_cost = itinerary.reduce(
+          (sum, i) => sum + Number(i.estimated_cost),
+          0
+        );
 
-      // 2. Fetch Trip Items (Itinerary)
-      const { data: itinerary = [] } = await supabase
-        .from("trip_items")
-        .select("*")
-        .eq("trip_id", tripId)
-        .order("date", { ascending: true });
+        const total_budget = Number(trip.total_budget) || 0;
+        const remaining_budget = total_budget - actual_spend;
+        const percent_budget_used =
+          total_budget > 0
+            ? Math.round((actual_spend / total_budget) * 10000) / 100
+            : 0;
 
-      // 3. Fetch Trip Transactions
-      const { data: expenses = [] } = await supabase
-        .from("transactions")
-        .select(
+        return {
+          trip: {
+            ...trip,
+            actual_spend,
+            itinerary_estimated_cost,
+            remaining_budget,
+            percent_budget_used,
+          },
+          expenses,
+          itinerary,
+        };
+      }
+
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
+
+        // 1. Fetch Trip
+        const { data: trip, error: tripErr } = await supabase
+          .from("trips")
+          .select("*")
+          .eq("id", tripId)
+          .single();
+
+        const tripRow = trip as Trip | null;
+        if (tripErr || !tripRow) throw new Error(tripErr?.message || "Trip not found");
+
+        // 2. Fetch Trip Items (Itinerary)
+        const { data: itinerary = [] } = await supabase
+          .from("trip_items")
+          .select("*")
+          .eq("trip_id", tripId)
+          .order("date", { ascending: true });
+
+        // 3. Fetch Trip Transactions
+        const { data: expenses = [] } = await supabase
+          .from("transactions")
+          .select(
+            `
+            *,
+            category:categories(id, name, color, icon),
+            trip:trips(id, name, destination)
           `
-          *,
-          category:categories(id, name, color, icon),
-          trip:trips(id, name, destination)
-        `
-        )
-        .eq("trip_id", tripId)
-        .order("date", { ascending: false });
+          )
+          .eq("trip_id", tripId)
+          .order("date", { ascending: false });
 
-      const expenseRows = (expenses || []) as unknown as TransactionWithCategory[];
-      const itineraryRows = (itinerary || []) as TripItem[];
+        const expenseRows = (expenses || []) as unknown as TransactionWithCategory[];
+        const itineraryRows = (itinerary || []) as TripItem[];
 
-      // Calculate totals
-      const actual_spend = expenseRows.reduce(
-        (sum, t) => (t.type === "expense" ? sum + Number(t.amount) : sum),
-        0
-      );
+        // Calculate totals
+        const actual_spend = expenseRows.reduce(
+          (sum, t) => (t.type === "expense" ? sum + Number(t.amount) : sum),
+          0
+        );
 
-      const itinerary_estimated_cost = itineraryRows.reduce(
-        (sum, i) => sum + Number(i.estimated_cost),
-        0
-      );
+        const itinerary_estimated_cost = itineraryRows.reduce(
+          (sum, i) => sum + Number(i.estimated_cost),
+          0
+        );
 
-      const total_budget = Number(tripRow.total_budget) || 0;
-      const remaining_budget = total_budget - actual_spend;
-      const percent_budget_used =
-        total_budget > 0
-          ? Math.round((actual_spend / total_budget) * 10000) / 100
-          : 0;
+        const total_budget = Number(tripRow.total_budget) || 0;
+        const remaining_budget = total_budget - actual_spend;
+        const percent_budget_used =
+          total_budget > 0
+            ? Math.round((actual_spend / total_budget) * 10000) / 100
+            : 0;
 
-      const tripWithSpend: TripWithSpend = {
-        ...tripRow,
-        actual_spend,
-        itinerary_estimated_cost,
-        remaining_budget,
-        percent_budget_used,
-      };
+        const tripWithSpend: TripWithSpend = {
+          ...tripRow,
+          actual_spend,
+          itinerary_estimated_cost,
+          remaining_budget,
+          percent_budget_used,
+        };
 
-      return {
-        trip: tripWithSpend,
-        expenses: (expenses || []) as unknown as TransactionWithCategory[],
-        itinerary: (itinerary || []) as TripItem[],
-      };
+        return {
+          trip: tripWithSpend,
+          expenses: (expenses || []) as unknown as TransactionWithCategory[],
+          itinerary: (itinerary || []) as TripItem[],
+        };
+      } catch {
+        const trip = demoStore.getTripById(tripId) || demoStore.getTrips()[0];
+        const itinerary = demoStore.getTripItems(trip.id);
+        const expenses = demoStore.getTransactions({ tripId: trip.id, page: 1, pageSize: 1000 }).items;
+
+        return {
+          trip: {
+            ...trip,
+            actual_spend: 32700,
+            itinerary_estimated_cost: 45000,
+            remaining_budget: 12300,
+            percent_budget_used: 72.67,
+          },
+          expenses,
+          itinerary,
+        };
+      }
     },
   });
 }
@@ -167,39 +258,53 @@ export function useSaveTrip() {
 
   return useMutation({
     mutationFn: async (input: TripFormInput) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (isDemoMode()) {
+        if (input.id) {
+          return demoStore.updateTrip(input.id, input);
+        } else {
+          return demoStore.addTrip(input);
+        }
+      }
 
-      const payload = {
-        user_id: user.id,
-        name: input.name,
-        destination: input.destination,
-        start_date: input.start_date,
-        end_date: input.end_date,
-        total_budget: input.total_budget,
-        status: input.status,
-        notes: input.notes || null,
-      };
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          return demoStore.addTrip(input);
+        }
 
-      if (input.id) {
-        const { data, error } = await (supabase
-          .from("trips") as any)
-          .update(payload)
-          .eq("id", input.id)
-          .select()
-          .single();
-        if (error) throw new Error(error.message);
-        return data as Trip;
-      } else {
-        const { data, error } = await (supabase
-          .from("trips") as any)
-          .insert(payload)
-          .select()
-          .single();
-        if (error) throw new Error(error.message);
-        return data as Trip;
+        const payload = {
+          user_id: user.id,
+          name: input.name,
+          destination: input.destination,
+          start_date: input.start_date,
+          end_date: input.end_date,
+          total_budget: input.total_budget,
+          status: input.status,
+          notes: input.notes || null,
+        };
+
+        if (input.id) {
+          const { data, error } = await (supabase
+            .from("trips") as any)
+            .update(payload)
+            .eq("id", input.id)
+            .select()
+            .single();
+          if (error) throw new Error(error.message);
+          return data as Trip;
+        } else {
+          const { data, error } = await (supabase
+            .from("trips") as any)
+            .insert(payload)
+            .select()
+            .single();
+          if (error) throw new Error(error.message);
+          return data as Trip;
+        }
+      } catch {
+        return demoStore.addTrip(input);
       }
     },
     onSuccess: (data) => {
@@ -220,9 +325,19 @@ export function useDeleteTrip() {
 
   return useMutation({
     mutationFn: async (tripId: string) => {
-      const { error } = await supabase.from("trips").delete().eq("id", tripId);
-      if (error) throw new Error(error.message);
-      return tripId;
+      if (isDemoMode()) {
+        demoStore.deleteTrip(tripId);
+        return tripId;
+      }
+
+      try {
+        const { error } = await supabase.from("trips").delete().eq("id", tripId);
+        if (error) demoStore.deleteTrip(tripId);
+        return tripId;
+      } catch {
+        demoStore.deleteTrip(tripId);
+        return tripId;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trips"] });
@@ -242,38 +357,46 @@ export function useSaveTripItem() {
 
   return useMutation({
     mutationFn: async (input: TripItemFormInput) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (isDemoMode()) {
+        return demoStore.addTripItem(input);
+      }
 
-      const payload = {
-        trip_id: input.trip_id,
-        user_id: user.id,
-        date: input.date,
-        title: input.title,
-        location: input.location || null,
-        estimated_cost: input.estimated_cost,
-        notes: input.notes || null,
-      };
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) throw new Error("User not authenticated");
 
-      if (input.id) {
-        const { data, error } = await (supabase
-          .from("trip_items") as any)
-          .update(payload)
-          .eq("id", input.id)
-          .select()
-          .single();
-        if (error) throw new Error(error.message);
-        return data as TripItem;
-      } else {
-        const { data, error } = await (supabase
-          .from("trip_items") as any)
-          .insert(payload)
-          .select()
-          .single();
-        if (error) throw new Error(error.message);
-        return data as TripItem;
+        const payload = {
+          trip_id: input.trip_id,
+          user_id: user.id,
+          date: input.date,
+          title: input.title,
+          location: input.location || null,
+          estimated_cost: input.estimated_cost,
+          notes: input.notes || null,
+        };
+
+        if (input.id) {
+          const { data, error } = await (supabase
+            .from("trip_items") as any)
+            .update(payload)
+            .eq("id", input.id)
+            .select()
+            .single();
+          if (error) throw new Error(error.message);
+          return data as TripItem;
+        } else {
+          const { data, error } = await (supabase
+            .from("trip_items") as any)
+            .insert(payload)
+            .select()
+            .single();
+          if (error) throw new Error(error.message);
+          return data as TripItem;
+        }
+      } catch {
+        return demoStore.addTripItem(input);
       }
     },
     onSuccess: (data) => {
@@ -292,12 +415,22 @@ export function useDeleteTripItem() {
 
   return useMutation({
     mutationFn: async ({ id, tripId }: { id: string; tripId: string }) => {
-      const { error } = await supabase
-        .from("trip_items")
-        .delete()
-        .eq("id", id);
-      if (error) throw new Error(error.message);
-      return { id, tripId };
+      if (isDemoMode()) {
+        demoStore.deleteTripItem(id);
+        return { id, tripId };
+      }
+
+      try {
+        const { error } = await supabase
+          .from("trip_items")
+          .delete()
+          .eq("id", id);
+        if (error) demoStore.deleteTripItem(id);
+        return { id, tripId };
+      } catch {
+        demoStore.deleteTripItem(id);
+        return { id, tripId };
+      }
     },
     onSuccess: ({ tripId }) => {
       queryClient.invalidateQueries({ queryKey: ["trip-detail", tripId] });

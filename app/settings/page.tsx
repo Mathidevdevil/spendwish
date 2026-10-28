@@ -40,6 +40,7 @@ import { useCurrency } from "@/components/providers/currency-provider";
 import { CurrencyCode } from "@/lib/utils";
 import { exportTransactionsToCSV } from "@/lib/csv-export";
 import { Profile } from "@/types/database";
+import { isDemoMode, disableDemoMode, demoStore } from "@/lib/demo-data";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -56,24 +57,32 @@ export default function SettingsPage() {
   // Load current user profile
   useEffect(() => {
     async function loadUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setEmail(user.email || "");
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        const profileRow = profile as Profile | null;
-        if (profileRow) {
-          setFullName(profileRow.full_name || "");
-          if (profileRow.currency) {
-            setCurrency(profileRow.currency as CurrencyCode);
+      if (isDemoMode()) {
+        setEmail("demo@spendwise.app");
+        setFullName("Aarav Sharma");
+        return;
+      }
+
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          setEmail(user.email || "");
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+          const profileRow = profile as Profile | null;
+          if (profileRow) {
+            setFullName(profileRow.full_name || "");
+            if (profileRow.currency) {
+              setCurrency(profileRow.currency as CurrencyCode);
+            }
           }
         }
-      }
+      } catch {}
     }
     loadUser();
   }, [supabase, setCurrency]);
@@ -82,6 +91,13 @@ export default function SettingsPage() {
     e.preventDefault();
     try {
       setLoadingProfile(true);
+
+      if (isDemoMode()) {
+        document.cookie = `spendwise_user_name=${fullName}; path=/; max-age=2592000; SameSite=Lax`;
+        toast.success("Profile updated successfully (Demo Mode)");
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -150,6 +166,16 @@ export default function SettingsPage() {
 
   const handleExportCSV = async () => {
     try {
+      if (isDemoMode()) {
+        const txs = demoStore.getTransactions({ page: 1, pageSize: 1000 }).items;
+        exportTransactionsToCSV(
+          txs,
+          `spendwise-ledger-${new Date().toISOString().split("T")[0]}.csv`
+        );
+        toast.success("CSV transaction ledger exported (Demo Mode)");
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -184,6 +210,16 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     try {
       setIsDeleting(true);
+
+      if (isDemoMode()) {
+        disableDemoMode();
+        await fetch("/api/auth/demo-session", { method: "DELETE" }).catch(() => {});
+        toast.success("Demo session cleared");
+        router.push("/login");
+        router.refresh();
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
