@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { format, subDays } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { parsedTransactionOutputSchema } from "@/schemas/ai";
 
@@ -78,10 +79,8 @@ function fallbackParseTransaction(text: string) {
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const authData = await getCurrentUser();
+    const user = authData?.user;
 
     // Authenticate user
     if (!user) {

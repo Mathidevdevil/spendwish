@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { monthlyInsightsOutputSchema } from "@/schemas/ai";
+import { demoStore, DEMO_USER_ID } from "@/lib/demo-data";
 
 // Graceful algorithmic fallback if ANTHROPIC_API_KEY is missing
 function fallbackInsights(
@@ -60,10 +62,8 @@ function fallbackInsights(
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const authData = await getCurrentUser();
+    const user = authData?.user;
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -82,34 +82,44 @@ export async function POST(request: Request) {
     const month = Number(body.month) || new Date().getMonth() + 1;
     const year = Number(body.year) || new Date().getFullYear();
 
-    // Fetch aggregates ONLY from database RPC or tables
-    // (Never send raw notes or personal identifiers to AI!)
-    const { data: summaryData } = await (supabase as any).rpc(
-      "get_monthly_summary",
-      {
-        p_user_id: user.id,
-        p_month: month,
-        p_year: year,
-      }
-    );
+    // Check if demo user
+    let summary: any;
+    let categories: any[] = [];
 
-    const { data: categoryData } = await (supabase as any).rpc(
-      "get_category_breakdown",
-      {
-        p_user_id: user.id,
-        p_month: month,
-        p_year: year,
-      }
-    );
+    if (user.id === DEMO_USER_ID) {
+      const demoSum = demoStore.getDashboardSummary(month, year);
+      summary = demoSum;
+      const demoCats = demoStore.getCategoryBreakdown(month, year);
+      categories = demoCats.slice(0, 3);
+    } else {
+      const supabase = await createClient();
+      const { data: summaryData } = await (supabase as any).rpc(
+        "get_monthly_summary",
+        {
+          p_user_id: user.id,
+          p_month: month,
+          p_year: year,
+        }
+      );
 
-    const summary = summaryData?.[0] || {
-      total_income: 0,
-      total_expense: 0,
-      net_savings: 0,
-      savings_rate: 0,
-    };
+      const { data: categoryData } = await (supabase as any).rpc(
+        "get_category_breakdown",
+        {
+          p_user_id: user.id,
+          p_month: month,
+          p_year: year,
+        }
+      );
 
-    const categories = (categoryData || []).slice(0, 3);
+      summary = summaryData?.[0] || {
+        total_income: 0,
+        total_expense: 0,
+        net_savings: 0,
+        savings_rate: 0,
+      };
+
+      categories = (categoryData || []).slice(0, 3);
+    }
     const topCat = categories[0]?.category_name;
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
