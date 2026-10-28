@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const budgetFormSchema = z.object({
-  id: z.string().uuid().optional(),
-  category_id: z.string().uuid("Please select a category"),
+  id: z.string().optional(),
+  category_id: z.string().min(1, "Please select a category"),
   amount: z.coerce
     .number({ invalid_type_error: "Budget amount must be a number" })
     .positive("Budget amount must be greater than 0")

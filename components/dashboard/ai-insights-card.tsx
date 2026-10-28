@@ -83,17 +83,21 @@ export function AiInsightsCard({ month, year }: AiInsightsCardProps) {
         ) : (
           <>
             <p className="text-sm font-medium text-foreground/90 leading-relaxed">
-              {data?.summary}
+              {data?.summary || "Add transactions and budgets to generate AI-driven monthly cash flow recommendations."}
             </p>
 
             <div className="space-y-2 pt-1">
               <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
-                <span>3 Practical Suggestions</span>
+                <span>Practical Financial Suggestions</span>
               </h4>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                {data?.suggestions.map((suggestion, idx) => (
+                {(data?.suggestions || [
+                  "Track daily small spends via Quick Add to maintain 20%+ savings.",
+                  "Establish monthly category budgets for Food and Shopping.",
+                  "Tag vacation expenses to Travel Plans to monitor trip budget vs actuals.",
+                ]).map((suggestion, idx) => (
                   <div
                     key={idx}
                     className="p-3 rounded-xl border border-border/80 bg-background/60 text-xs leading-relaxed text-foreground/80 flex items-start gap-2.5 shadow-xs"

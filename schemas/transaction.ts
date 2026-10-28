@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const transactionFormSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.string().optional(),
   type: z.enum(["income", "expense"], {
     required_error: "Transaction type is required",
   }),
@@ -9,13 +9,26 @@ export const transactionFormSchema = z.object({
     .number({ invalid_type_error: "Amount must be a valid number" })
     .positive("Amount must be greater than 0")
     .max(999999999.99, "Amount is too large"),
-  category_id: z.string().uuid("Please select a valid category").nullable().optional(),
+  category_id: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (!val || val === "none" || val === "" ? null : val)),
   date: z.string().min(1, "Date is required"),
   payment_method: z.enum(["Cash", "UPI", "Card", "Bank"], {
     required_error: "Payment method is required",
   }),
-  notes: z.string().max(500, "Notes cannot exceed 500 characters").optional().nullable(),
-  trip_id: z.string().uuid().nullable().optional(),
+  notes: z
+    .string()
+    .max(500, "Notes cannot exceed 500 characters")
+    .optional()
+    .nullable()
+    .transform((val) => (!val ? null : val)),
+  trip_id: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (!val || val === "none" || val === "" ? null : val)),
 });
 
 export const transactionFilterSchema = z.object({

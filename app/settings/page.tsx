@@ -123,6 +123,34 @@ export default function SettingsPage() {
 
   const handleExportJSON = async () => {
     try {
+      if (isDemoMode()) {
+        const exportPayload = {
+          exportedAt: new Date().toISOString(),
+          user: { email: "demo@spendwise.app", fullName: fullName || "Aarav Sharma" },
+          currency,
+          transactions: demoStore.getTransactions({ page: 1, pageSize: 1000 }).items,
+          categories: demoStore.getCategories(),
+          budgets: demoStore.getBudgets(new Date().getMonth() + 1, new Date().getFullYear()),
+          trips: demoStore.getTrips(),
+        };
+
+        const dataStr =
+          "data:text/json;charset=utf-8," +
+          encodeURIComponent(JSON.stringify(exportPayload, null, 2));
+        const downloadAnchor = document.createElement("a");
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute(
+          "download",
+          `spendwise-backup-${new Date().toISOString().split("T")[0]}.json`
+        );
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+
+        toast.success("JSON data export downloaded");
+        return;
+      }
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
