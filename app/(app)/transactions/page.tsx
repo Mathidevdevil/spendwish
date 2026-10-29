@@ -44,17 +44,17 @@ export default function TransactionsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-[-0.02em] text-foreground">
             Transactions
           </h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Manage your daily expenses, incomes, and travel spending
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Real-time ledger with smart filtering, trip associations, and CSV export
           </p>
         </div>
 
         <Button
           onClick={() => transactionModal.open()}
-          className="rounded-xl gap-2 font-semibold shadow-sm shadow-primary/20"
+          className="btn-gradient font-semibold rounded-xl text-xs h-9 gap-1.5 shrink-0"
         >
           <Plus className="h-4 w-4" />
           <span>Add Transaction</span>
