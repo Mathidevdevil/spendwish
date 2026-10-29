@@ -88,48 +88,65 @@ function GoogleOAuthButtonInner({ text }: { text: string }) {
     try {
       setLoading(true);
 
-      const isPlaceholderUrl =
+      const googleClientId =
+        process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+        "176968816003-gh8en4aoq79l7ha200bjq4e4ntb281f1.apps.googleusercontent.com";
+
+      const isPlaceholderSupabase =
         !process.env.NEXT_PUBLIC_SUPABASE_URL ||
         process.env.NEXT_PUBLIC_SUPABASE_URL.includes("spendwise-demo.supabase.co") ||
         process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
 
-      // When running in local environment without connected Supabase backend,
-      // present the Google account selection interface
-      if (isPlaceholderUrl) {
-        setLoading(false);
-        setShowPicker(true);
+      // 1. If real Supabase backend is configured, use Supabase OAuth
+      if (!isPlaceholderSupabase) {
+        const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+          targetRedirect
+        )}`;
+
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo,
+            queryParams: {
+              access_type: "offline",
+              prompt: "select_account consent",
+            },
+          },
+        });
+
+        if (error) {
+          if (
+            error.message?.toLowerCase().includes("not enabled") ||
+            error.message?.toLowerCase().includes("unsupported provider")
+          ) {
+            toast.error(
+              "Google provider is not enabled in your Supabase project under Authentication > Providers > Google."
+            );
+          } else {
+            toast.error(error.message || "Failed to sign in with Google");
+          }
+          setLoading(false);
+        }
         return;
       }
 
-      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
-        targetRedirect
-      )}`;
-
-      // Official Google OAuth with account chooser forced (select_account)
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: "offline",
-            prompt: "select_account consent",
-          },
-        },
-      });
-
-      if (error) {
-        if (
-          error.message?.toLowerCase().includes("not enabled") ||
-          error.message?.toLowerCase().includes("unsupported provider")
-        ) {
-          toast.error(
-            "Google provider is not enabled in your Supabase project under Authentication > Providers > Google."
-          );
-        } else {
-          toast.error(error.message || "Failed to sign in with Google");
-        }
-        setLoading(false);
+      // 2. Direct Google OAuth flow with Google Cloud credentials
+      if (googleClientId) {
+        const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+        googleAuthUrl.searchParams.set("client_id", googleClientId);
+        googleAuthUrl.searchParams.set("redirect_uri", `${window.location.origin}/auth/callback`);
+        googleAuthUrl.searchParams.set("response_type", "code");
+        googleAuthUrl.searchParams.set("scope", "openid email profile");
+        googleAuthUrl.searchParams.set("access_type", "offline");
+        googleAuthUrl.searchParams.set("prompt", "select_account");
+        googleAuthUrl.searchParams.set("state", targetRedirect);
+        window.location.href = googleAuthUrl.toString();
+        return;
       }
+
+      // 3. Fallback: local demo picker
+      setLoading(false);
+      setShowPicker(true);
     } catch {
       toast.error("Could not initiate Google sign in. Please try again.");
       setLoading(false);
