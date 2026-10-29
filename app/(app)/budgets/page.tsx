@@ -95,7 +95,7 @@ export default function BudgetsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
           <MonthYearPicker
             month={selectedMonth}
             year={selectedYear}

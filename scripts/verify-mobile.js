@@ -53,6 +53,31 @@ async function main() {
     console.log(`\n--- Viewport: ${vp.label} (${vp.width}x${vp.height}) ---`);
 
     for (const route of routes) {
+      if (route.name === "login") {
+        await context.clearCookies();
+      } else {
+        await context.addCookies([
+          {
+            name: "spendwise_demo_session",
+            value: "true",
+            domain: "localhost",
+            path: "/",
+          },
+          {
+            name: "spendwise_user_email",
+            value: "demo@spendwise.app",
+            domain: "localhost",
+            path: "/",
+          },
+          {
+            name: "spendwise_user_name",
+            value: "Demo User",
+            domain: "localhost",
+            path: "/",
+          },
+        ]);
+      }
+
       await page.goto(`http://localhost:3000${route.path}`, {
         waitUntil: "networkidle",
       });

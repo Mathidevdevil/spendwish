@@ -154,7 +154,7 @@ export function SummaryCards({
       >
         {/* Subtle radial glow background */}
         <div
-          className={`absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16 transition-opacity ${
+          className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none transition-opacity ${
             isNetPositive
               ? "bg-emerald-500/10"
               : isNetNegative
@@ -276,7 +276,7 @@ export function SummaryCards({
       <div className="lg:col-span-4 flex flex-col gap-3.5">
         {/* KPI 1: Income */}
         <Card
-          className="rounded-[20px] border-border/80 bg-surface p-4 sm:p-4.5 flex-1 flex flex-col justify-between shadow-xs hover:border-border transition-all"
+          className="rounded-[20px] border-border/80 bg-surface p-4 sm:p-4.5 flex-1 flex flex-col justify-between shadow-xs hover:border-border transition-all overflow-hidden"
           style={{
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
@@ -301,15 +301,15 @@ export function SummaryCards({
             )}
           </div>
 
-          <div className="flex items-end justify-between gap-3 mt-2">
-            <div>
+          <div className="flex items-end justify-between gap-2 mt-2">
+            <div className="min-w-0">
               <Money
                 amount={summary.total_income}
                 size="xl"
                 className="text-foreground"
               />
             </div>
-            <div className="w-24 shrink-0 pb-1">
+            <div className="w-16 sm:w-20 shrink-0 pb-1">
               <Sparkline data={incomeSparkData} height={26} color="#34D399" showFill={false} />
             </div>
           </div>
@@ -317,7 +317,7 @@ export function SummaryCards({
 
         {/* KPI 2: Expense */}
         <Card
-          className="rounded-[20px] border-border/80 bg-surface p-4 sm:p-4.5 flex-1 flex flex-col justify-between shadow-xs hover:border-border transition-all"
+          className="rounded-[20px] border-border/80 bg-surface p-4 sm:p-4.5 flex-1 flex flex-col justify-between shadow-xs hover:border-border transition-all overflow-hidden"
           style={{
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
@@ -342,15 +342,15 @@ export function SummaryCards({
             )}
           </div>
 
-          <div className="flex items-end justify-between gap-3 mt-2">
-            <div>
+          <div className="flex items-end justify-between gap-2 mt-2">
+            <div className="min-w-0">
               <Money
                 amount={summary.total_expense}
                 size="xl"
                 className="text-foreground"
               />
             </div>
-            <div className="w-24 shrink-0 pb-1">
+            <div className="w-16 sm:w-20 shrink-0 pb-1">
               <Sparkline data={expenseSparkData} height={26} color="#FB7185" showFill={false} />
             </div>
           </div>

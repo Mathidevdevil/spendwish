@@ -63,7 +63,7 @@ export function MobileBottomNav() {
     <>
       <nav
         className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/85 backdrop-blur-xl border-t border-border/80 px-2 safe-pb"
-        aria-label="Mobile Navigation"
+        aria-label="Mobile Bottom Navigation"
       >
         <div className="flex items-center justify-around h-16 max-w-md mx-auto">
           {/* 1. Home */}
@@ -116,7 +116,7 @@ export function MobileBottomNav() {
               type="button"
               onClick={() => transactionModal.open()}
               className="flex items-center justify-center -mt-6 h-12 w-12 rounded-full bg-gradient-to-tr from-emerald-400 to-cyan-400 text-slate-950 shadow-lg shadow-emerald-500/35 hover:brightness-105 active:scale-90 transition-all touch-manipulation focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              aria-label="Add transaction"
+              aria-label="Quick Add Transaction"
               title="Add New Entry"
             >
               <Plus className="h-6 w-6 stroke-[2.75]" />
