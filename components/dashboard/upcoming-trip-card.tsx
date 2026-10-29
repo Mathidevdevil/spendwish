@@ -130,7 +130,7 @@ export function UpcomingTripCard({ trips, isLoading }: UpcomingTripCardProps) {
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground font-medium">Budget Used</span>
             <span
-              className={`font-mono font-semibold tabular-nums ${
+              className={`num font-semibold ${
                 isOver
                   ? "text-rose-400"
                   : isNear
@@ -150,7 +150,7 @@ export function UpcomingTripCard({ trips, isLoading }: UpcomingTripCardProps) {
             }
           />
 
-          <div className="flex items-center justify-between text-[11px] font-mono tabular-nums text-muted-foreground pt-0.5">
+          <div className="flex items-center justify-between text-[11px] num text-muted-foreground pt-0.5">
             <span>Spent {format(activeTrip.actual_spend)}</span>
             <span>Total {format(activeTrip.total_budget)}</span>
           </div>
@@ -159,7 +159,7 @@ export function UpcomingTripCard({ trips, isLoading }: UpcomingTripCardProps) {
         <div className="pt-2 border-t border-border/50 flex items-center justify-between">
           <span className="text-[11px] text-muted-foreground">
             {activeTrip.remaining_budget >= 0 ? "Remaining:" : "Over by:"}
-            <strong className="ml-1 text-foreground font-mono">
+            <strong className="ml-1 text-foreground num">
               {format(Math.abs(activeTrip.remaining_budget))}
             </strong>
           </span>
@@ -176,3 +176,4 @@ export function UpcomingTripCard({ trips, isLoading }: UpcomingTripCardProps) {
     </Card>
   );
 }
+

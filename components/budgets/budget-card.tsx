@@ -184,7 +184,7 @@ export function BudgetCard({ budget, onEdit }: BudgetCardProps) {
                       type="number"
                       value={inlineLimit}
                       onChange={(e) => setInlineLimit(e.target.value)}
-                      className="h-6 w-20 px-1.5 py-0 text-xs font-mono font-bold bg-surface-elevated rounded-md"
+                      className="h-6 w-20 px-1.5 py-0 text-xs num font-bold bg-surface-elevated rounded-md"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleInlineSave();

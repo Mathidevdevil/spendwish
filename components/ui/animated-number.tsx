@@ -65,10 +65,11 @@ export function AnimatedNumber({
     : displayValue.toLocaleString("en-IN");
 
   return (
-    <span className={cn("font-sans tabular-nums", className)}>
+    <span className={cn("num", className)}>
       {prefix}
       {formatted}
       {suffix}
     </span>
   );
 }
+

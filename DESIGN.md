@@ -58,11 +58,14 @@
 ## 4. Typography Scale
 
 - **Font Families**:
-  - **Primary UI & Currency**: `Geist Sans` (`var(--font-geist-sans)` / Inter fallback)
-  - **Codes, Machine IDs, Micro-labels**: `Geist Mono` (`var(--font-geist-mono)` / monospace)
+  - **Display (Page titles, hero numbers, section headings)**: `Sora` (`var(--font-display)`), weights 600, 700
+  - **UI & Body (Nav, buttons, forms, tables, paragraphs)**: `Inter` (`var(--font-sans)`), variable font
+  - **Mono (Tiny labels, codes, kbd shortcuts)**: `JetBrains Mono` (`var(--font-mono)`), weight 500
 - **Rules**:
-  - **ALL money uses tabular-nums with Geist Sans** (`font-sans tabular-nums`). Never switch font family for numbers.
-  - Display numbers: `40px`â€“`56px`, `font-semibold` / `font-bold`, tight tracking (`tracking-[-0.02em]`).
+  - **ALL money and numeric data use Inter with `.num`** (`font-variant-numeric: tabular-nums` and `font-feature-settings: "tnum", "cv11"`).
+  - Type scale: `12` / `13` / `14` / `16` / `18` / `22` / `28` / `36` / `48` / `64`.
+  - Line heights: 1.6 body, 1.2 headings, 1.0 display numbers.
+  - Letter-spacing: `-0.02em` for display, `-0.01em` for headings, `0` for body, `+0.04em` with uppercase for tiny labels (`tracking-eyebrow`).
   - No filler taglines under page titles. Keep headings concise, crisp, and confident.
 - **Scale**:
   - `11px`: Tiny tags, micro metadata
@@ -117,3 +120,4 @@ All category icons use `lucide-react` with `strokeWidth={1.75}` and size `18pxâ€
 - Card hover: `translateY(-2px)` + subtle border glow.
 - Staggered entrance for dashboard bento cards: `40ms` delay increments via framer-motion.
 - Full respect for `@media (prefers-reduced-motion: reduce)`.
+

@@ -75,7 +75,7 @@ export function OnboardingEmptyState({
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-3">
               <span>Quick Start Checklist</span>
               <span>•</span>
-              <span className="font-sans tabular-nums">{completedCount} of 3 completed</span>
+              <span className="num">{completedCount} of 3 completed</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               Welcome to Spendwise
@@ -217,7 +217,7 @@ export function OnboardingEmptyState({
               <rect width="84" height="34" rx="10" fill="currentColor" className="text-surface" stroke="currentColor" strokeWidth="1" />
               <circle cx="16" cy="17" r="6" fill="#34D399" fillOpacity="0.2" />
               <path d="M14 19 L18 15 M18 15 H15 M18 15 V18" stroke="#34D399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <text x="30" y="21" fill="currentColor" className="text-foreground" fontSize="11" fontWeight="bold" fontFamily="sans-serif">
+              <text x="30" y="21" fill="currentColor" className="text-foreground" fontSize="11" fontWeight="bold" fontFamily="var(--font-sans), sans-serif">
                 ₹1,24,000
               </text>
             </g>
@@ -227,7 +227,7 @@ export function OnboardingEmptyState({
               <rect width="82" height="34" rx="10" fill="currentColor" className="text-surface" stroke="currentColor" strokeWidth="1" />
               <circle cx="16" cy="17" r="6" fill="#22D3EE" fillOpacity="0.2" />
               <path d="M13 17 L15.5 19.5 L19 14" stroke="#22D3EE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <text x="30" y="21" fill="currentColor" className="text-foreground" fontSize="11" fontWeight="bold" fontFamily="sans-serif">
+              <text x="30" y="21" fill="currentColor" className="text-foreground" fontSize="11" fontWeight="bold" fontFamily="var(--font-sans), sans-serif">
                 Safe 80%
               </text>
             </g>
@@ -248,3 +248,4 @@ export function OnboardingEmptyState({
     </div>
   );
 }
+

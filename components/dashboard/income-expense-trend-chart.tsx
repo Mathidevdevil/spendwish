@@ -65,7 +65,7 @@ export default function IncomeExpenseTrendChart({
             dataKey="month_label"
             axisLine={false}
             tickLine={false}
-            tick={{ fontSize: 11, fill: "currentColor" }}
+            tick={{ fontSize: 11, fill: "currentColor", fontFamily: "var(--font-sans)" }}
             className="text-muted-foreground font-medium"
           />
 
@@ -73,8 +73,8 @@ export default function IncomeExpenseTrendChart({
             axisLine={false}
             tickLine={false}
             tickFormatter={formatYAxis}
-            tick={{ fontSize: 11, fill: "currentColor" }}
-            className="text-muted-foreground font-sans tabular-nums"
+            tick={{ fontSize: 11, fill: "currentColor", fontFamily: "var(--font-sans)" }}
+            className="text-muted-foreground num"
           />
 
           <Tooltip
@@ -89,15 +89,15 @@ export default function IncomeExpenseTrendChart({
                     <p className="font-semibold text-foreground text-xs">{label}</p>
                     <div className="flex items-center justify-between gap-4 text-emerald-400">
                       <span className="text-[11px] text-muted-foreground">Inflow:</span>
-                      <span className="font-bold font-sans tabular-nums">{format(Number(income))}</span>
+                      <span className="font-bold num">{format(Number(income))}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4 text-rose-400">
                       <span className="text-[11px] text-muted-foreground">Outflow:</span>
-                      <span className="font-bold font-sans tabular-nums">{format(Number(expense))}</span>
+                      <span className="font-bold num">{format(Number(expense))}</span>
                     </div>
                     <div className="pt-1 border-t border-border/50 flex items-center justify-between gap-4">
                       <span className="text-[11px] text-muted-foreground">Net:</span>
-                      <span className={`font-bold font-sans tabular-nums ${net >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                      <span className={`font-bold num ${net >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
                         {net >= 0 ? "+" : ""}{format(net)}
                       </span>
                     </div>

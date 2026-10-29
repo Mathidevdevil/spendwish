@@ -100,7 +100,12 @@
   }
   body {
     @apply bg-background text-foreground antialiased min-h-[100dvh] selection:bg-emerald-500/20 selection:text-emerald-400 font-sans;
+    text-rendering: optimizeLegibility;
+    font-optical-sizing: auto;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), system-ui, -apple-system, sans-serif;
   }
 }
 
@@ -115,6 +120,12 @@
 }
 
 @layer utilities {
+  .num {
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "cv11";
+  }
+
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }

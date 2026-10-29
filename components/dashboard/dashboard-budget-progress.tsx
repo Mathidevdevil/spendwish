@@ -121,7 +121,7 @@ export function DashboardBudgetProgress({
               }
             />
 
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-sans tabular-nums pt-0.5">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground num pt-0.5">
               <span>{format(b.spent)} of {format(b.amount)}</span>
               <span className={remaining >= 0 ? "text-muted-foreground" : "text-rose-400 font-semibold"}>
                 {remaining >= 0 ? `${format(remaining)} left` : `${format(Math.abs(remaining))} over`}

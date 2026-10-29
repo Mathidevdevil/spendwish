@@ -169,7 +169,7 @@ export function AuthCard({ title, description, children }: AuthCardProps) {
         </div>
 
         {/* Footer note */}
-        <footer className="text-center text-xs text-muted-foreground py-2">
+        <footer className="text-center text-[11px] text-muted-foreground/80 py-2">
           By signing in, you agree to our Terms of Service & Privacy Policy.
         </footer>
       </main>

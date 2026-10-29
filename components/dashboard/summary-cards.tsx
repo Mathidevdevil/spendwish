@@ -154,7 +154,7 @@ export function SummaryCards({
       >
         {/* Subtle radial glow background */}
         <div
-          className={`absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl pointer-events-none transition-opacity ${
+          className={`absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none -mr-16 -mt-16 transition-opacity ${
             isNetPositive
               ? "bg-emerald-500/10"
               : isNetNegative
@@ -170,8 +170,8 @@ export function SummaryCards({
               <div className="h-7 w-7 rounded-lg bg-surface-elevated border border-border/80 flex items-center justify-center text-muted-foreground">
                 <Wallet className="h-4 w-4 text-primary" />
               </div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Net balance this month
+              <span className="text-xs font-semibold uppercase tracking-eyebrow text-muted-foreground">
+                Net Balance
               </span>
             </div>
 
@@ -211,7 +211,7 @@ export function SummaryCards({
               value={summary.net_savings}
               isCurrency
               prefix={isNetPositive ? "+" : ""}
-              className={`text-4xl sm:text-5xl lg:text-[46px] font-bold tracking-[-0.02em] font-sans tabular-nums ${
+              className={`text-4xl sm:text-5xl lg:text-[46px] font-bold tracking-display num ${
                 isNetPositive
                   ? "text-emerald-400"
                   : isNetNegative
@@ -291,7 +291,7 @@ export function SummaryCards({
 
             {incomeDeltaPercent !== null && (
               <span
-                className={`text-[11px] font-bold font-sans tabular-nums inline-flex items-center gap-0.5 ${
+                className={`text-[11px] font-bold num inline-flex items-center gap-0.5 ${
                   incomeDeltaPercent >= 0 ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
@@ -332,7 +332,7 @@ export function SummaryCards({
 
             {expenseDeltaPercent !== null && (
               <span
-                className={`text-[11px] font-bold font-sans tabular-nums inline-flex items-center gap-0.5 ${
+                className={`text-[11px] font-bold num inline-flex items-center gap-0.5 ${
                   expenseDeltaPercent <= 0 ? "text-emerald-400" : "text-rose-400"
                 }`}
               >
@@ -367,7 +367,7 @@ export function SummaryCards({
             <span className="text-xs font-semibold text-muted-foreground block">
               Savings Rate
             </span>
-            <div className="text-2xl font-bold font-sans tabular-nums text-foreground tracking-tight">
+            <div className="text-2xl font-bold num text-foreground tracking-tight">
               {summary.savings_rate.toFixed(1)}%
             </div>
             <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">

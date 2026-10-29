@@ -50,15 +50,15 @@ export default function DailySpendBarChart({
             axisLine={false}
             tickLine={false}
             interval={2}
-            tick={{ fontSize: 10, fill: "currentColor" }}
+            tick={{ fontSize: 10, fill: "currentColor", fontFamily: "var(--font-sans)" }}
             className="text-muted-foreground"
           />
           <YAxis
             axisLine={false}
             tickLine={false}
             tickFormatter={formatYAxis}
-            tick={{ fontSize: 10, fill: "currentColor" }}
-            className="text-muted-foreground"
+            tick={{ fontSize: 10, fill: "currentColor", fontFamily: "var(--font-sans)" }}
+            className="text-muted-foreground num"
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -69,7 +69,7 @@ export default function DailySpendBarChart({
                     <p className="text-muted-foreground text-[11px] mb-0.5">
                       {formatDate(item.date, "medium")}
                     </p>
-                    <p className="font-bold text-foreground">
+                    <p className="font-bold text-foreground num">
                       {format(item.total_expense)}
                     </p>
                   </div>

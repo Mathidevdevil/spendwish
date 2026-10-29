@@ -13,3 +13,4 @@ export function getInitials(name?: string | null, email?: string | null): string
 
   return "SW";
 }
+

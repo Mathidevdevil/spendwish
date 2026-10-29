@@ -217,7 +217,7 @@ export function TransactionList({
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <span className="text-[11px]">Daily total:</span>
                 <span
-                  className={`font-semibold font-sans tabular-nums text-xs ${
+                  className={`font-semibold num text-xs ${
                     group.dailyNet > 0
                       ? "text-emerald-400"
                       : group.dailyNet < 0
@@ -424,18 +424,18 @@ export function TransactionList({
         <div className="flex items-center gap-4 text-xs">
           <div className="hidden sm:flex items-center gap-1.5 text-emerald-400">
             <span className="text-[11px] text-muted-foreground">In:</span>
-            <span className="font-bold font-sans tabular-nums">{format(summaryTotals.income)}</span>
+            <span className="font-bold num">{format(summaryTotals.income)}</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-1.5 text-rose-400">
             <span className="text-[11px] text-muted-foreground">Out:</span>
-            <span className="font-bold font-sans tabular-nums">{format(summaryTotals.expense)}</span>
+            <span className="font-bold num">{format(summaryTotals.expense)}</span>
           </div>
 
           <div className="flex items-center gap-1.5 border-l border-border/60 pl-3">
             <span className="text-[11px] text-muted-foreground">Net:</span>
             <span
-              className={`font-bold font-sans tabular-nums text-sm ${
+              className={`font-bold num text-sm ${
                 summaryTotals.net >= 0 ? "text-emerald-400" : "text-rose-400"
               }`}
             >

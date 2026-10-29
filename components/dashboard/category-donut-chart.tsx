@@ -121,10 +121,10 @@ export default function CategoryDonutChart({
                           {item.name}
                         </span>
                       </div>
-                      <div className="font-bold font-sans tabular-nums text-foreground">
+                      <div className="font-bold num text-foreground">
                         {format(item.value)}
                       </div>
-                      <div className="text-[11px] text-muted-foreground font-sans tabular-nums">
+                      <div className="text-[11px] text-muted-foreground num">
                         {item.percentage}% of total expenses
                       </div>
                     </div>
@@ -138,10 +138,10 @@ export default function CategoryDonutChart({
 
         {/* Total Centered in Donut */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-eyebrow">
             Total Spent
           </span>
-          <span className="text-base sm:text-lg font-bold font-sans tabular-nums text-foreground tracking-tight">
+          <span className="text-base sm:text-lg font-bold num text-foreground tracking-tight">
             {format(totalExpense)}
           </span>
         </div>
@@ -169,7 +169,7 @@ export default function CategoryDonutChart({
                 {item.name}
               </span>
             </div>
-            <div className="font-sans tabular-nums font-semibold text-foreground text-[11px] shrink-0 ml-1">
+            <div className="num font-semibold text-foreground text-[11px] shrink-0 ml-1">
               {item.percentage}%
             </div>
           </div>

@@ -55,7 +55,7 @@ export function Money({
   return (
     <span
       className={cn(
-        "font-sans tabular-nums inline-flex items-baseline",
+        "num inline-flex items-baseline",
         sizeClasses[size],
         colorClass,
         className
@@ -66,3 +66,4 @@ export function Money({
     </span>
   );
 }
+

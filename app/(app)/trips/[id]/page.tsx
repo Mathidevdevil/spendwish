@@ -261,7 +261,7 @@ export default function TripDetailPage({
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Trip Budget
           </span>
           <div className="mt-2">
@@ -277,13 +277,13 @@ export default function TripDetailPage({
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Planned Itinerary
           </span>
           <div className="mt-2">
             <Money amount={trip.itinerary_estimated_cost} size="xl" className="text-cyan-400" />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1 font-sans tabular-nums">
+          <p className="text-[11px] text-muted-foreground mt-1 num">
             {itinerary.length} scheduled {itinerary.length === 1 ? "activity" : "activities"}
           </p>
         </Card>
@@ -295,7 +295,7 @@ export default function TripDetailPage({
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Actual Spend
           </span>
           <div className="mt-2">
@@ -305,7 +305,7 @@ export default function TripDetailPage({
               className={isOver ? "text-rose-400" : "text-foreground"}
             />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1 font-sans tabular-nums">
+          <p className="text-[11px] text-muted-foreground mt-1 num">
             {Math.round(trip.percent_budget_used)}% of limit used
           </p>
         </Card>
@@ -317,7 +317,7 @@ export default function TripDetailPage({
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Remaining Budget
           </span>
           <div className="mt-2">
@@ -344,7 +344,7 @@ export default function TripDetailPage({
           <span className="font-bold text-foreground">
             Budget Consumption vs Itinerary Plan
           </span>
-          <span className="text-muted-foreground font-sans tabular-nums">
+          <span className="text-muted-foreground num">
             {format(trip.actual_spend)} of {format(trip.total_budget)} ({Math.round(trip.percent_budget_used)}%)
           </span>
         </div>
@@ -440,7 +440,7 @@ export default function TripDetailPage({
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground text-[11px]">
                       <span>Day estimate:</span>
-                      <span className="font-bold text-foreground font-sans tabular-nums">
+                      <span className="font-bold text-foreground num">
                         {format(dayGroup.dayTotal)}
                       </span>
                     </div>

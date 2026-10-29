@@ -127,7 +127,7 @@ export default function BudgetsPage() {
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Total Budgeted
           </span>
           <div className="mt-2">
@@ -145,13 +145,13 @@ export default function BudgetsPage() {
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Total Spent
           </span>
           <div className="mt-2">
             <Money amount={totalSpent} size="xl" className="text-rose-400" />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1 font-sans tabular-nums">
+          <p className="text-[11px] text-muted-foreground mt-1 num">
             {overallPercentage}% of total limit
           </p>
         </Card>
@@ -163,7 +163,7 @@ export default function BudgetsPage() {
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Remaining Limit
           </span>
           <div className="mt-2">
@@ -185,7 +185,7 @@ export default function BudgetsPage() {
             boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
           }}
         >
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-eyebrow block">
             Health Status
           </span>
           <div className="mt-2 flex items-center gap-1.5 text-base sm:text-lg font-bold">
