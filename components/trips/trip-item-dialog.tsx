@@ -66,7 +66,7 @@ export function TripItemDialog({
         notes: "",
       });
     }
-  }, [open, initialData, tripId]);
+  }, [open, initialData, tripId, defaultDate, form]);
 
   const onSubmit = async (data: TripItemFormInput) => {
     try {
@@ -87,42 +87,55 @@ export function TripItemDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={initialData ? "Edit Itinerary Item" : "Add Itinerary Item"}
-      description="Plan an activity, hotel stay, flight or transfer with estimated cost"
+      title={initialData ? "Edit Itinerary Item" : "Add Itinerary Activity"}
+      description="Schedule an activity, accommodation stay, transit, or tour"
     >
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-1">
         {/* Title */}
         <div className="space-y-1.5">
-          <Label htmlFor="item-title">Activity / Title</Label>
+          <Label htmlFor="item-title" className="text-xs font-semibold text-muted-foreground">
+            Activity / Item Name
+          </Label>
           <Input
             id="item-title"
-            placeholder="e.g. Scuba diving, Morning Indigo Flight, Hotel Check-in"
+            placeholder="e.g. Scuba diving, Morning Flight, Hotel Check-in"
+            className="h-10 text-xs sm:text-sm rounded-xl bg-surface"
             {...form.register("title")}
           />
           {form.formState.errors.title && (
-            <p className="text-xs text-destructive">
+            <p className="text-xs text-rose-400">
               {form.formState.errors.title.message}
             </p>
           )}
         </div>
 
         {/* Date & Location */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div className="space-y-1.5">
-            <Label htmlFor="item-date">Date</Label>
-            <Input id="item-date" type="date" {...form.register("date")} />
+            <Label htmlFor="item-date" className="text-xs font-semibold text-muted-foreground">
+              Date
+            </Label>
+            <Input
+              id="item-date"
+              type="date"
+              className="h-10 text-xs rounded-xl bg-surface"
+              {...form.register("date")}
+            />
             {form.formState.errors.date && (
-              <p className="text-xs text-destructive">
+              <p className="text-xs text-rose-400">
                 {form.formState.errors.date.message}
               </p>
             )}
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="item-location">Location (Optional)</Label>
+            <Label htmlFor="item-location" className="text-xs font-semibold text-muted-foreground">
+              Location (Optional)
+            </Label>
             <Input
               id="item-location"
               placeholder="e.g. Grand Island, Candolim Beach"
+              className="h-10 text-xs sm:text-sm rounded-xl bg-surface"
               {...form.register("location")}
             />
           </div>
@@ -130,11 +143,11 @@ export function TripItemDialog({
 
         {/* Estimated Cost */}
         <div className="space-y-1.5">
-          <Label htmlFor="item-cost">
-            Estimated Cost ({currency === "INR" ? "₹" : "$"})
+          <Label htmlFor="item-cost" className="text-xs font-semibold text-muted-foreground">
+            Estimated Cost
           </Label>
-          <div className="relative">
-            <span className="absolute left-3.5 top-2.5 text-base font-bold text-muted-foreground">
+          <div className="relative flex items-center">
+            <span className="absolute left-3.5 text-lg font-bold text-muted-foreground pointer-events-none">
               {currency === "INR" ? "₹" : "$"}
             </span>
             <Input
@@ -142,12 +155,12 @@ export function TripItemDialog({
               type="number"
               step="50"
               placeholder="0.00"
-              className="pl-8 font-semibold"
+              className="pl-9 h-11 text-lg font-bold font-sans tabular-nums rounded-xl bg-surface"
               {...form.register("estimated_cost", { valueAsNumber: true })}
             />
           </div>
           {form.formState.errors.estimated_cost && (
-            <p className="text-xs text-destructive">
+            <p className="text-xs text-rose-400">
               {form.formState.errors.estimated_cost.message}
             </p>
           )}
@@ -155,33 +168,41 @@ export function TripItemDialog({
 
         {/* Notes */}
         <div className="space-y-1.5">
-          <Label htmlFor="item-notes">Notes / Booking Confirmation</Label>
+          <Label htmlFor="item-notes" className="text-xs font-semibold text-muted-foreground">
+            Notes / Confirmation (Optional)
+          </Label>
           <Input
             id="item-notes"
-            placeholder="e.g. Confirmation PNR 6E4829, check-in 2 PM"
+            placeholder="e.g. PNR #6E4829, voucher in email"
+            className="h-10 text-xs sm:text-sm rounded-xl bg-surface"
             {...form.register("notes")}
           />
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border/60">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="h-9 text-xs rounded-xl px-4"
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isPending} className="min-w-[120px]">
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="btn-gradient h-9 text-xs rounded-xl font-semibold px-5 min-w-[120px]"
+          >
             {isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                 Saving...
               </>
             ) : initialData ? (
-              "Update Item"
+              "Update Activity"
             ) : (
-              "Add to Itinerary"
+              "Add Activity"
             )}
           </Button>
         </div>

@@ -26,10 +26,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DeleteDialog } from "@/components/transactions/delete-dialog";
+import { Money } from "@/components/ui/money";
 
 interface TripCardProps {
   trip: TripWithSpend;
   onEdit: (trip: TripWithSpend) => void;
+}
+
+const GRADIENT_PALETTES = [
+  "from-emerald-500/25 via-teal-500/15 to-cyan-500/20",
+  "from-cyan-500/25 via-blue-500/15 to-indigo-500/20",
+  "from-purple-500/25 via-pink-500/15 to-rose-500/20",
+  "from-amber-500/25 via-orange-500/15 to-rose-500/20",
+];
+
+function getGradient(name: string = ""): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % GRADIENT_PALETTES.length;
+  return GRADIENT_PALETTES[index];
 }
 
 export function TripCard({ trip, onEdit }: TripCardProps) {
@@ -42,143 +59,130 @@ export function TripCard({ trip, onEdit }: TripCardProps) {
   const remaining = total - spent;
   const percentage = Math.round(trip.percent_budget_used);
   const isOver = spent > total;
+  const isNear = percentage >= 80 && !isOver;
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "ongoing":
-        return (
-          <Badge
-            variant="success"
-            className="text-[11px] px-2 py-0.5 font-semibold gap-1"
-          >
-            <Clock className="h-3 w-3" />
-            <span>Ongoing</span>
-          </Badge>
-        );
-      case "completed":
-        return (
-          <Badge
-            variant="secondary"
-            className="text-[11px] px-2 py-0.5 font-semibold gap-1 text-muted-foreground"
-          >
-            <CheckCircle2 className="h-3 w-3" />
-            <span>Completed</span>
-          </Badge>
-        );
-      case "planned":
-      default:
-        return (
-          <Badge
-            variant="DEFAULT"
-            className="text-[11px] px-2 py-0.5 font-semibold gap-1 bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20"
-          >
-            <Plane className="h-3 w-3" />
-            <span>Planned</span>
-          </Badge>
-        );
-    }
-  };
+  const gradientClass = getGradient(trip.destination || trip.name);
 
   const handleDelete = async () => {
     try {
       await deleteMutation.mutateAsync(trip.id);
       setDeleteOpen(false);
     } catch {
-      // error handled in mutation
+      // handled in mutation
     }
   };
 
   return (
     <>
-      <Card className="group relative rounded-2xl border-border bg-card shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between">
-        <Link href={`/trips/${trip.id}`} className="block p-5 flex-1">
-          {/* Top Status & Destination */}
+      <Card
+        className="group relative rounded-[20px] border-border/80 bg-surface shadow-xs hover:border-border transition-all overflow-hidden flex flex-col justify-between"
+        style={{
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
+        }}
+      >
+        {/* Deterministic Gradient Cover Generated from Destination Name */}
+        <div className={`p-5 bg-gradient-to-br ${gradientClass} border-b border-border/60 relative`}>
           <div className="flex items-center justify-between gap-2 mb-3">
-            {getStatusBadge(trip.status)}
-            <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium truncate">
-              <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-              <span className="truncate">{trip.destination}</span>
-            </div>
+            <Badge
+              variant={
+                trip.status === "ongoing"
+                  ? "default"
+                  : trip.status === "planned"
+                  ? "info"
+                  : "secondary"
+              }
+              className="text-[10px] px-2.5 py-0.5 capitalize font-bold rounded-full"
+            >
+              {trip.status === "ongoing" && <Clock className="h-3 w-3 mr-1" />}
+              {trip.status === "planned" && <Plane className="h-3 w-3 mr-1" />}
+              {trip.status === "completed" && <CheckCircle2 className="h-3 w-3 mr-1" />}
+              <span>{trip.status}</span>
+            </Badge>
+
+            {/* Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground bg-background/50 backdrop-blur-xs rounded-lg"
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                  <span className="sr-only">Trip actions</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="rounded-xl bg-surface border-border/80">
+                <DropdownMenuItem
+                  onClick={() => onEdit(trip)}
+                  className="cursor-pointer gap-2 text-xs"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  <span>Edit Trip</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeleteOpen(true)}
+                  className="cursor-pointer gap-2 text-xs text-rose-400 focus:text-rose-400 focus:bg-rose-500/10"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Trip</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          {/* Trip Title */}
-          <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
-            {trip.name}
-          </h3>
+          {/* Destination as Large Text */}
+          <Link href={`/trips/${trip.id}`} className="block group-hover:opacity-95">
+            <div className="flex items-center gap-1.5 text-xs text-primary font-semibold mb-1">
+              <MapPin className="h-3.5 w-3.5" />
+              <span>Destination</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+              {trip.destination}
+            </h2>
+            <p className="text-xs text-muted-foreground font-medium mt-0.5 truncate">
+              {trip.name}
+            </p>
+          </Link>
+        </div>
 
-          {/* Dates */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 mb-4">
-            <Calendar className="h-3.5 w-3.5" />
+        {/* Card Body */}
+        <Link href={`/trips/${trip.id}`} className="block p-5 flex-1 flex flex-col justify-between space-y-4">
+          {/* Date Range */}
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5 text-primary" />
             <span>
-              {formatDate(trip.start_date, "short")} -{" "}
-              {formatDate(trip.end_date, "medium")}
+              {formatDate(trip.start_date, "short")} – {formatDate(trip.end_date, "medium")}
             </span>
           </div>
 
-          {/* Financial summary bar */}
-          <div className="space-y-2 pt-2 border-t border-border/70">
-            <div className="flex items-baseline justify-between text-xs font-mono tabular-nums">
-              <span className="text-muted-foreground font-medium font-sans">Spent:</span>
-              <div>
-                <span className="font-bold text-sm text-foreground">
-                  {format(spent)}
-                </span>
-                <span className="text-muted-foreground ml-1">
-                  / {format(total)}
-                </span>
+          {/* Budget Progress Bar */}
+          <div className="space-y-2 pt-2 border-t border-border/60">
+            <div className="flex items-baseline justify-between text-xs">
+              <span className="text-muted-foreground font-medium">Budget:</span>
+              <div className="flex items-baseline gap-1">
+                <Money amount={spent} size="sm" className="text-foreground" />
+                <span className="text-muted-foreground text-[11px]">/ {format(total)}</span>
               </div>
             </div>
 
             <Progress
               value={Math.min(100, percentage)}
-              className="h-2 bg-secondary"
+              className="h-1.5 bg-surface-elevated rounded-full"
               indicatorClassName={
-                isOver ? "bg-rose-500" : "bg-emerald-600 dark:bg-emerald-500"
+                isOver ? "bg-rose-400" : isNear ? "bg-amber-400" : "bg-emerald-400"
               }
             />
 
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono tabular-nums">
-              <span>{percentage}% budget used</span>
-              <span className={isOver ? "text-destructive font-semibold" : ""}>
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-sans tabular-nums pt-0.5">
+              <span>{percentage}% used</span>
+              <span className={isOver ? "text-rose-400 font-bold" : isNear ? "text-amber-400 font-semibold" : ""}>
                 {isOver
                   ? `Over by ${format(Math.abs(remaining))}`
-                  : `${format(remaining)} left`}
+                  : `${format(remaining)} remaining`}
               </span>
             </div>
           </div>
         </Link>
-
-        {/* Quick Menu Button */}
-        <div className="absolute top-4 right-3">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground opacity-80 group-hover:opacity-100"
-              >
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">Trip actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-xl">
-              <DropdownMenuItem
-                onClick={() => onEdit(trip)}
-                className="cursor-pointer gap-2"
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-                <span>Edit Trip</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeleteOpen(true)}
-                className="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span>Delete Trip</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </Card>
 
       <DeleteDialog
@@ -186,7 +190,7 @@ export function TripCard({ trip, onEdit }: TripCardProps) {
         onOpenChange={setDeleteOpen}
         onConfirm={handleDelete}
         title={`Delete trip "${trip.name}"?`}
-        description="Are you sure you want to delete this trip and its itinerary? Tagged transactions will be kept and unlinked from the trip."
+        description="Are you sure you want to delete this trip and its itinerary? Tagged transactions will be kept in your ledger."
         isLoading={deleteMutation.isPending}
       />
     </>
