@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { CurrencyProvider } from "@/components/providers/currency-provider";
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/providers/pwa-register";
 
@@ -73,9 +74,11 @@ export default function RootLayout({
         >
           <QueryProvider>
             <CurrencyProvider>
-              {children}
-              <Toaster position="top-right" richColors closeButton />
-              <PwaRegister />
+              <SmoothScrollProvider>
+                {children}
+                <Toaster position="top-right" richColors closeButton />
+                <PwaRegister />
+              </SmoothScrollProvider>
             </CurrencyProvider>
           </QueryProvider>
         </ThemeProvider>

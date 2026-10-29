@@ -210,7 +210,7 @@ export function CommandPalette({
         </div>
 
         {/* Command list */}
-        <div className="max-h-80 overflow-y-auto p-2 space-y-1">
+        <div data-lenis-prevent="true" className="max-h-80 overflow-y-auto p-2 space-y-1">
           {filtered.length === 0 ? (
             <div className="py-8 text-center text-xs text-muted-foreground">
               No matching commands or pages found.

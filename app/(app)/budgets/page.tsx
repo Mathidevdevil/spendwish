@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MonthYearPicker } from "@/components/dashboard/month-year-picker";
 import { BudgetCard } from "@/components/budgets/budget-card";
 import { BudgetFormDialog } from "@/components/budgets/budget-form-dialog";
+import { RevealCard } from "@/components/ui/reveal-card";
 import { useBudgets, useSaveBudget } from "@/hooks/use-budgets";
 import { useCategories } from "@/hooks/use-categories";
 import { useCurrency } from "@/components/providers/currency-provider";
@@ -260,14 +261,15 @@ export default function BudgetsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {budgets.map((b) => (
-            <BudgetCard
-              key={b.id}
-              budget={b}
-              onEdit={(budget) => {
-                setEditingBudget(budget);
-                setDialogOpen(true);
-              }}
-            />
+            <RevealCard key={b.id}>
+              <BudgetCard
+                budget={b}
+                onEdit={(budget) => {
+                  setEditingBudget(budget);
+                  setDialogOpen(true);
+                }}
+              />
+            </RevealCard>
           ))}
         </div>
       )}

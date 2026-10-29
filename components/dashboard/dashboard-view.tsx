@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { OnboardingEmptyState } from "@/components/ui/empty-state";
+import { RevealCard } from "@/components/ui/reveal-card";
 
 // Dynamically imported chart components for bundle size & 90+ Lighthouse score
 const CategoryDonutChart = dynamic(() => import("./category-donut-chart"), {
@@ -125,103 +126,113 @@ export function DashboardView() {
       />
 
       {/* Bento Grid Row 2: AI Financial Insights Card (12 cols) */}
-      <AiInsightsCard
-        month={selectedMonth}
-        year={selectedYear}
-        summary={summary}
-        isSummaryLoading={isLoading}
-      />
+      <RevealCard>
+        <AiInsightsCard
+          month={selectedMonth}
+          year={selectedYear}
+          summary={summary}
+          isSummaryLoading={isLoading}
+        />
+      </RevealCard>
 
       {/* Bento Grid Row 3: Cash Flow Trend (7 cols) + Category Donut (5 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* 6-Month Income vs Expense Trend */}
-        <Card
-          className="lg:col-span-7 rounded-[20px] border-border/80 bg-surface p-5 shadow-xs"
-          style={{
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
-          }}
-        >
-          <CardHeader className="p-0 pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              <span>Cash Flow (Last 6 Months)</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 pt-1">
-            <IncomeExpenseTrendChart data={trend} isLoading={isLoading} />
-          </CardContent>
-        </Card>
+        <RevealCard className="lg:col-span-7">
+          <Card
+            className="rounded-[20px] border-border/80 bg-surface p-5 shadow-xs h-full"
+            style={{
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
+            }}
+          >
+            <CardHeader className="p-0 pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                <span>Cash Flow (Last 6 Months)</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 pt-1">
+              <IncomeExpenseTrendChart data={trend} isLoading={isLoading} />
+            </CardContent>
+          </Card>
+        </RevealCard>
 
         {/* Category Expense Donut Chart */}
-        <Card
-          className="lg:col-span-5 rounded-[20px] border-border/80 bg-surface p-5 shadow-xs"
-          style={{
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
-          }}
-        >
-          <CardHeader className="p-0 pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <PieChartIcon className="h-4 w-4 text-primary" />
-              <span>Expense by Category</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 pt-1">
-            <CategoryDonutChart
-              data={categoryBreakdown}
-              isLoading={isLoading}
-            />
-          </CardContent>
-        </Card>
+        <RevealCard className="lg:col-span-5">
+          <Card
+            className="rounded-[20px] border-border/80 bg-surface p-5 shadow-xs h-full"
+            style={{
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
+            }}
+          >
+            <CardHeader className="p-0 pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <PieChartIcon className="h-4 w-4 text-primary" />
+                <span>Expense by Category</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 pt-1">
+              <CategoryDonutChart
+                data={categoryBreakdown}
+                isLoading={isLoading}
+              />
+            </CardContent>
+          </Card>
+        </RevealCard>
       </div>
 
       {/* Bento Grid Row 4: Recent Tx (5 cols) + Budgets (4 cols) + Upcoming Trip (3 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Recent Transactions */}
-        <Card
-          className="lg:col-span-5 rounded-[20px] border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between"
-          style={{
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
-          }}
-        >
-          <CardHeader className="p-0 pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <Receipt className="h-4 w-4 text-primary" />
-              <span>Recent Transactions</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 pt-1 flex-1">
-            <RecentTransactions
-              transactions={recentTxData?.items || []}
-              isLoading={isTxLoading}
-            />
-          </CardContent>
-        </Card>
+        <RevealCard className="lg:col-span-5 h-full">
+          <Card
+            className="rounded-[20px] border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between h-full"
+            style={{
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
+            }}
+          >
+            <CardHeader className="p-0 pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <Receipt className="h-4 w-4 text-primary" />
+                <span>Recent Transactions</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 pt-1 flex-1">
+              <RecentTransactions
+                transactions={recentTxData?.items || []}
+                isLoading={isTxLoading}
+              />
+            </CardContent>
+          </Card>
+        </RevealCard>
 
         {/* Monthly Budgets Tracking */}
-        <Card
-          className="lg:col-span-4 rounded-[20px] border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between"
-          style={{
-            boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
-          }}
-        >
-          <CardHeader className="p-0 pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <Layers className="h-4 w-4 text-primary" />
-              <span>Monthly Budget Tracking</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 pt-1 flex-1">
-            <DashboardBudgetProgress
-              budgets={budgets}
-              isLoading={isBudgetsLoading}
-            />
-          </CardContent>
-        </Card>
+        <RevealCard className="lg:col-span-4 h-full">
+          <Card
+            className="rounded-[20px] border-border/80 bg-surface p-5 shadow-xs flex flex-col justify-between h-full"
+            style={{
+              boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
+            }}
+          >
+            <CardHeader className="p-0 pb-3">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <Layers className="h-4 w-4 text-primary" />
+                <span>Monthly Budget Tracking</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 pt-1 flex-1">
+              <DashboardBudgetProgress
+                budgets={budgets}
+                isLoading={isBudgetsLoading}
+              />
+            </CardContent>
+          </Card>
+        </RevealCard>
 
         {/* Upcoming Trip Card */}
-        <div className="lg:col-span-3 h-full">
+        <RevealCard className="lg:col-span-3 h-full">
           <UpcomingTripCard trips={trips} isLoading={isTripsLoading} />
-        </div>
+        </RevealCard>
       </div>
     </div>
   );

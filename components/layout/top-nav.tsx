@@ -10,6 +10,7 @@ import { UserMenu } from "./user-menu";
 import { CommandPalette } from "./command-palette";
 import { Button } from "@/components/ui/button";
 import { transactionModal } from "@/hooks/use-transaction-modal";
+import { cn } from "@/lib/utils";
 
 interface TopNavProps {
   userEmail?: string | null;
@@ -24,6 +25,16 @@ export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
   const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(avatarUrl || null);
   const [isDemo, setIsDemo] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 8);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Compute active page title
   let pageTitle = "Dashboard";
@@ -88,7 +99,14 @@ export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex h-16 w-full items-center border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <header
+        className={cn(
+          "sticky top-0 z-20 flex h-16 w-full items-center transition-all duration-200",
+          isScrolled
+            ? "border-b border-border/80 bg-background/85 backdrop-blur-xl shadow-xs"
+            : "border-b border-border/40 bg-background/50 backdrop-blur-md"
+        )}
+      >
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           {/* Mobile brand header (<1024px) */}
           <div className="flex lg:hidden items-center gap-2.5 min-w-0">

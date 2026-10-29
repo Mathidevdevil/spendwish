@@ -97,6 +97,7 @@
   }
   html {
     scrollbar-gutter: stable;
+    scroll-padding-top: 4rem;
   }
   body {
     @apply bg-background text-foreground antialiased min-h-[100dvh] selection:bg-emerald-500/20 selection:text-emerald-400 font-sans;
@@ -117,6 +118,28 @@
 /* Safe area for mobile navigation */
 .safe-pb {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+}
+
+/* Lenis smooth scrolling rules */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
 
 @layer utilities {

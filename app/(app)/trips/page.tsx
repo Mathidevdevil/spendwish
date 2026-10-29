@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { TripCard } from "@/components/trips/trip-card";
 import { TripFormDialog } from "@/components/trips/trip-form-dialog";
+import { RevealCard } from "@/components/ui/reveal-card";
 import { useTrips, TripWithSpend } from "@/hooks/use-trips";
 
 export default function TripsPage() {
@@ -96,14 +97,15 @@ export default function TripsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {trips.map((trip) => (
-            <TripCard
-              key={trip.id}
-              trip={trip}
-              onEdit={(t) => {
-                setEditingTrip(t);
-                setDialogOpen(true);
-              }}
-            />
+            <RevealCard key={trip.id}>
+              <TripCard
+                trip={trip}
+                onEdit={(t) => {
+                  setEditingTrip(t);
+                  setDialogOpen(true);
+                }}
+              />
+            </RevealCard>
           ))}
         </div>
       )}

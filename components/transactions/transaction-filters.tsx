@@ -191,7 +191,10 @@ export function TransactionFilters({
       </div>
 
       {/* Horizontally Scrollable Pill Filters (Desktop & Tablet) */}
-      <div className="hidden md:flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div
+        data-lenis-prevent="true"
+        className="hidden md:flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none"
+      >
         {/* Type Pill Filter */}
         <Popover open={typeOpen} onOpenChange={setTypeOpen}>
           <PopoverTrigger asChild>

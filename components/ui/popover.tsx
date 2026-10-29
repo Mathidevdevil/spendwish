@@ -15,6 +15,7 @@ const PopoverContent = React.forwardRef<
   <PopoverPrimitive.Portal>
     <PopoverPrimitive.Content
       ref={ref}
+      data-lenis-prevent="true"
       align={align}
       sideOffset={sideOffset}
       className={cn(
