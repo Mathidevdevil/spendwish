@@ -3,40 +3,60 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Wallet } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 
 interface TopNavProps {
   userEmail?: string | null;
   userName?: string | null;
+  avatarUrl?: string | null;
 }
 
-export function TopNav({ userEmail, userName }: TopNavProps) {
+export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
   const [resolvedEmail, setResolvedEmail] = useState<string | null>(userEmail || null);
   const [resolvedName, setResolvedName] = useState<string | null>(userName || null);
+  const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(avatarUrl || null);
 
   useEffect(() => {
     if (userEmail) setResolvedEmail(userEmail);
     if (userName) setResolvedName(userName);
+    if (avatarUrl) setResolvedAvatar(avatarUrl);
 
-    if (!userEmail || !userName) {
-      const emailCookie = document.cookie
-        .split("; ")
-        .find((r) => r.startsWith("spendwise_user_email="))
-        ?.split("=")[1];
-      const nameCookie = document.cookie
-        .split("; ")
-        .find((r) => r.startsWith("spendwise_user_name="))
-        ?.split("=")[1];
+    const emailCookie = document.cookie
+      .split("; ")
+      .find((r) => r.startsWith("spendwise_user_email="))
+      ?.split("=")[1];
+    const nameCookie = document.cookie
+      .split("; ")
+      .find((r) => r.startsWith("spendwise_user_name="))
+      ?.split("=")[1];
 
-      if (!userEmail && emailCookie) {
-        setResolvedEmail(decodeURIComponent(emailCookie));
-      }
-      if (!userName && nameCookie) {
-        setResolvedName(decodeURIComponent(nameCookie));
-      }
+    if (!userEmail && emailCookie) {
+      setResolvedEmail(decodeURIComponent(emailCookie));
     }
-  }, [userEmail, userName]);
+    if (!userName && nameCookie) {
+      setResolvedName(decodeURIComponent(nameCookie));
+    }
+
+    // Also fetch from supabase auth client
+    try {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          if (!userEmail && user.email) setResolvedEmail(user.email);
+          const metaName =
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split("@")[0];
+          if (!userName && metaName) setResolvedName(metaName);
+          const metaAvatar =
+            user.user_metadata?.avatar_url || user.user_metadata?.picture;
+          if (!avatarUrl && metaAvatar) setResolvedAvatar(metaAvatar);
+        }
+      }).catch(() => {});
+    } catch {}
+  }, [userEmail, userName, avatarUrl]);
 
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center justify-between border-b border-border bg-background/80 px-4 md:px-8 backdrop-blur-md">
@@ -51,7 +71,7 @@ export function TopNav({ userEmail, userName }: TopNavProps) {
       </div>
 
       <div className="hidden md:block">
-        {/* Desktop placeholder for current breadcrumb or search */}
+        {/* Desktop header tag */}
         <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground/80">
           Personal Wealth & Budgeting
         </span>
@@ -59,7 +79,11 @@ export function TopNav({ userEmail, userName }: TopNavProps) {
 
       <div className="flex items-center gap-2 sm:gap-3">
         <ThemeToggle />
-        <UserMenu email={resolvedEmail} name={resolvedName} />
+        <UserMenu
+          email={resolvedEmail}
+          name={resolvedName}
+          avatarUrl={resolvedAvatar}
+        />
       </div>
     </header>
   );

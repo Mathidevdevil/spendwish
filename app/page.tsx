@@ -9,6 +9,7 @@ export default async function DashboardPage() {
     <AppShell
       userEmail={authData?.user?.email}
       userName={authData?.profile?.full_name}
+      avatarUrl={authData?.profile?.avatar_url}
     >
       <DashboardView />
     </AppShell>

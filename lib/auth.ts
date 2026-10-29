@@ -25,6 +25,7 @@ export async function getCurrentUser() {
         id: DEMO_USER_ID,
         email,
         full_name: name,
+        avatar_url: null,
         currency: "INR",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -56,15 +57,38 @@ export async function getCurrentUser() {
     }
 
     // Fetch profile
-    const { data: profile } = await supabase
+    const { data: rawProfile } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
       .single();
+    const profile = rawProfile as Profile | null;
+
+    const userAvatar =
+      user.user_metadata?.avatar_url ||
+      user.user_metadata?.picture ||
+      profile?.avatar_url ||
+      null;
+
+    const mergedProfile: Profile = profile
+      ? { ...profile, avatar_url: userAvatar }
+      : {
+          id: user.id,
+          email: user.email || "",
+          full_name:
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email?.split("@")[0] ||
+            "User",
+          avatar_url: userAvatar,
+          currency: "INR",
+          created_at: user.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
 
     return {
       user,
-      profile: profile as Profile | null,
+      profile: mergedProfile,
     };
   } catch {
     return null;
