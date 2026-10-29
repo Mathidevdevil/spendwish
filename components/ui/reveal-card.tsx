@@ -28,3 +28,4 @@ export function RevealCard({ children, className, delay = 0 }: RevealCardProps) 
     </motion.div>
   );
 }
+
