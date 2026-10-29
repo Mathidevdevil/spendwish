@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, Lock, Mail, Sparkles, User } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, PlusCircle, Sparkles, User } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { signUpSchema, type SignUpInput } from "@/schemas/auth";
@@ -135,26 +135,42 @@ export default function SignUpPage() {
       description="Track expenses, create monthly budgets, and manage your travel"
     >
       <div className="space-y-4">
-        {/* Instant Demo Access Button */}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => handleDemoLogin()}
-          disabled={demoLoading || loading}
-          className="w-full h-11 border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
-        >
-          {demoLoading ? (
-            <>
+        {/* Instant Access Options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleDemoLogin("newuser@spendwise.app", "New User")}
+            disabled={demoLoading || loading}
+            className="h-11 border-border bg-card hover:bg-accent text-foreground font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm text-xs"
+          >
+            {demoLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-foreground" />
+            ) : (
+              <>
+                <PlusCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                <span>Start Empty (Clean Workspace)</span>
+              </>
+            )}
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleDemoLogin("demo@spendwise.app", "Aarav Sharma")}
+            disabled={demoLoading || loading}
+            className="h-11 border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm text-xs"
+          >
+            {demoLoading ? (
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              Loading demo workspace...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
-              <span>Instant Demo Access (Skip Setup)</span>
-            </>
-          )}
-        </Button>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
+                <span>Instant Demo (Sample Data)</span>
+              </>
+            )}
+          </Button>
+        </div>
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">

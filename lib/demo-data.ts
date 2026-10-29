@@ -19,6 +19,22 @@ import {
 
 export const DEMO_USER_ID = "00000000-0000-0000-0000-000000000001";
 
+export function getCurrentUserEmail(): string {
+  if (typeof window === "undefined") return "demo@spendwise.app";
+  try {
+    const fromLocal = localStorage.getItem("spendwise_user_email");
+    if (fromLocal) return fromLocal.trim().toLowerCase();
+    const match = document.cookie.match(/spendwise_user_email=([^;]+)/);
+    if (match) return decodeURIComponent(match[1]).trim().toLowerCase();
+  } catch {}
+  return "demo@spendwise.app";
+}
+
+export function isSampleDemoAccount(email?: string): boolean {
+  const currentEmail = (email || getCurrentUserEmail()).trim().toLowerCase();
+  return currentEmail === "demo@spendwise.app";
+}
+
 export function isDemoMode(): boolean {
   if (typeof window === "undefined") return false;
   const isDemoUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("spendwise-demo.supabase.co");
@@ -33,8 +49,10 @@ export function enableDemoMode(
 ) {
   if (typeof window !== "undefined") {
     localStorage.setItem("spendwise_demo_session", "true");
+    localStorage.setItem("spendwise_user_email", email.trim().toLowerCase());
+    localStorage.setItem("spendwise_user_name", name);
     document.cookie = "spendwise_demo_session=true; path=/; max-age=2592000; SameSite=Lax";
-    document.cookie = `spendwise_user_email=${encodeURIComponent(email)}; path=/; max-age=2592000; SameSite=Lax`;
+    document.cookie = `spendwise_user_email=${encodeURIComponent(email.trim().toLowerCase())}; path=/; max-age=2592000; SameSite=Lax`;
     document.cookie = `spendwise_user_name=${encodeURIComponent(name)}; path=/; max-age=2592000; SameSite=Lax`;
   }
 }
@@ -42,6 +60,8 @@ export function enableDemoMode(
 export function disableDemoMode() {
   if (typeof window !== "undefined") {
     localStorage.removeItem("spendwise_demo_session");
+    localStorage.removeItem("spendwise_user_email");
+    localStorage.removeItem("spendwise_user_name");
     document.cookie = "spendwise_demo_session=; path=/; max-age=0";
     document.cookie = "spendwise_user_email=; path=/; max-age=0";
     document.cookie = "spendwise_user_name=; path=/; max-age=0";
@@ -381,43 +401,88 @@ export function getInitialTransactions(): Transaction[] {
 }
 
 // -------------------------------------------------------------
-// LOCAL STORAGE BACKED STORE
+// LOCAL STORAGE BACKED STORE (PER-USER ISOLATED)
 // -------------------------------------------------------------
 class DemoStore {
-  private getStorage<T>(key: string, defaultVal: T): T {
-    if (typeof window === "undefined") return defaultVal;
+  private getStorageKey(key: string, email?: string): string {
+    const currentEmail = (email || getCurrentUserEmail()).trim().toLowerCase();
+    const safeEmail = currentEmail.replace(/[^a-zA-Z0-9]/g, "_");
+    return `spendwise_${safeEmail}_${key}`;
+  }
+
+  private getStorage<T>(key: string, defaultVal: T, email?: string): T {
+    const isDemo = isSampleDemoAccount(email);
+    if (typeof window === "undefined") {
+      // On server: return sample data ONLY for demo@spendwise.app or default categories
+      return isDemo || key === "categories" ? defaultVal : ([] as unknown as T);
+    }
     try {
-      const saved = localStorage.getItem(`spendwise_${key}`);
-      return saved ? JSON.parse(saved) : defaultVal;
+      const storageKey = this.getStorageKey(key, email);
+      const saved = localStorage.getItem(storageKey);
+      if (saved) return JSON.parse(saved);
+
+      // If user is demo@spendwise.app, check legacy un-prefixed key for backwards compatibility
+      if (isDemo) {
+        const legacy = localStorage.getItem(`spendwise_${key}`);
+        if (legacy) return JSON.parse(legacy);
+        return defaultVal;
+      }
+
+      // For ANY other user: they are a new user, so default is empty array!
+      // (Unless it's categories, which should default to INITIAL_CATEGORIES)
+      if (key === "categories") {
+        return defaultVal;
+      }
+      return [] as unknown as T;
     } catch {
-      return defaultVal;
+      return isDemo || key === "categories" ? defaultVal : ([] as unknown as T);
     }
   }
 
-  private setStorage<T>(key: string, val: T): void {
+  private setStorage<T>(key: string, val: T, email?: string): void {
     if (typeof window === "undefined") return;
     try {
-      localStorage.setItem(`spendwise_${key}`, JSON.stringify(val));
+      const storageKey = this.getStorageKey(key, email);
+      localStorage.setItem(storageKey, JSON.stringify(val));
+      if (isSampleDemoAccount(email)) {
+        localStorage.setItem(`spendwise_${key}`, JSON.stringify(val));
+      }
     } catch {}
   }
 
+  clearUserData(email?: string): void {
+    if (typeof window === "undefined") return;
+    const currentEmail = (email || getCurrentUserEmail()).trim().toLowerCase();
+    const safeEmail = currentEmail.replace(/[^a-zA-Z0-9]/g, "_");
+    localStorage.setItem(`spendwise_${safeEmail}_transactions`, JSON.stringify([]));
+    localStorage.setItem(`spendwise_${safeEmail}_budgets`, JSON.stringify([]));
+    localStorage.setItem(`spendwise_${safeEmail}_trips`, JSON.stringify([]));
+    localStorage.setItem(`spendwise_${safeEmail}_trip_items`, JSON.stringify([]));
+    if (currentEmail === "demo@spendwise.app") {
+      localStorage.setItem("spendwise_transactions", JSON.stringify([]));
+      localStorage.setItem("spendwise_budgets", JSON.stringify([]));
+      localStorage.setItem("spendwise_trips", JSON.stringify([]));
+      localStorage.setItem("spendwise_trip_items", JSON.stringify([]));
+    }
+  }
+
   // Categories
-  getCategories(): Category[] {
-    return this.getStorage("categories", INITIAL_CATEGORIES);
+  getCategories(email?: string): Category[] {
+    return this.getStorage("categories", INITIAL_CATEGORIES, email);
   }
 
   // Trips
-  getTrips(): Trip[] {
-    return this.getStorage("trips", INITIAL_TRIPS);
+  getTrips(email?: string): Trip[] {
+    return this.getStorage("trips", INITIAL_TRIPS, email);
   }
 
-  getTripById(id: string): Trip | null {
-    const trips = this.getTrips();
+  getTripById(id: string, email?: string): Trip | null {
+    const trips = this.getTrips(email);
     return trips.find((t) => t.id === id) || null;
   }
 
-  addTrip(input: TripFormInput): Trip {
-    const trips = this.getTrips();
+  addTrip(input: TripFormInput, email?: string): Trip {
+    const trips = this.getTrips(email);
     const newTrip: Trip = {
       id: `trip-${Date.now()}`,
       user_id: DEMO_USER_ID,
@@ -432,12 +497,12 @@ class DemoStore {
       updated_at: new Date().toISOString(),
     };
     trips.unshift(newTrip);
-    this.setStorage("trips", trips);
+    this.setStorage("trips", trips, email);
     return newTrip;
   }
 
-  updateTrip(id: string, input: TripFormInput): Trip {
-    const trips = this.getTrips();
+  updateTrip(id: string, input: TripFormInput, email?: string): Trip {
+    const trips = this.getTrips(email);
     const idx = trips.findIndex((t) => t.id === id);
     if (idx === -1) throw new Error("Trip not found");
 
@@ -453,23 +518,23 @@ class DemoStore {
       updated_at: new Date().toISOString(),
     };
     trips[idx] = updated;
-    this.setStorage("trips", trips);
+    this.setStorage("trips", trips, email);
     return updated;
   }
 
-  deleteTrip(id: string): void {
-    const trips = this.getTrips().filter((t) => t.id !== id);
-    this.setStorage("trips", trips);
+  deleteTrip(id: string, email?: string): void {
+    const trips = this.getTrips(email).filter((t) => t.id !== id);
+    this.setStorage("trips", trips, email);
   }
 
   // Trip Items
-  getTripItems(tripId: string): TripItem[] {
-    const all = this.getStorage("trip_items", INITIAL_TRIP_ITEMS);
+  getTripItems(tripId: string, email?: string): TripItem[] {
+    const all = this.getStorage("trip_items", INITIAL_TRIP_ITEMS, email);
     return all.filter((i) => i.trip_id === tripId);
   }
 
-  addTripItem(input: TripItemFormInput): TripItem {
-    const all = this.getStorage("trip_items", INITIAL_TRIP_ITEMS);
+  addTripItem(input: TripItemFormInput, email?: string): TripItem {
+    const all = this.getStorage("trip_items", INITIAL_TRIP_ITEMS, email);
     const newItem: TripItem = {
       id: `item-${Date.now()}`,
       trip_id: input.trip_id,
@@ -483,20 +548,20 @@ class DemoStore {
       updated_at: new Date().toISOString(),
     };
     all.push(newItem);
-    this.setStorage("trip_items", all);
+    this.setStorage("trip_items", all, email);
     return newItem;
   }
 
-  deleteTripItem(id: string): void {
-    const all = this.getStorage("trip_items", INITIAL_TRIP_ITEMS).filter((i) => i.id !== id);
-    this.setStorage("trip_items", all);
+  deleteTripItem(id: string, email?: string): void {
+    const all = this.getStorage("trip_items", INITIAL_TRIP_ITEMS, email).filter((i) => i.id !== id);
+    this.setStorage("trip_items", all, email);
   }
 
   // Budgets
-  getBudgets(month: number, year: number): BudgetWithCategory[] {
-    const budgets = this.getStorage("budgets", getInitialBudgets());
-    const categories = this.getCategories();
-    const txs = this.getTransactions({ page: 1, pageSize: 1000 }).items;
+  getBudgets(month: number, year: number, email?: string): BudgetWithCategory[] {
+    const budgets = this.getStorage("budgets", getInitialBudgets(), email);
+    const categories = this.getCategories(email);
+    const txs = this.getTransactions({ page: 1, pageSize: 1000 }, email).items;
 
     // Filter budgets by month/year
     const matched = budgets.filter((b) => b.month === month && b.year === year);
@@ -534,8 +599,8 @@ class DemoStore {
     });
   }
 
-  upsertBudget(input: BudgetFormInput): Budget {
-    const budgets = this.getStorage("budgets", getInitialBudgets());
+  upsertBudget(input: BudgetFormInput, email?: string): Budget {
+    const budgets = this.getStorage("budgets", getInitialBudgets(), email);
     const existingIdx = budgets.findIndex(
       (b) =>
         b.category_id === input.category_id &&
@@ -549,7 +614,7 @@ class DemoStore {
         amount: input.amount,
         updated_at: new Date().toISOString(),
       };
-      this.setStorage("budgets", budgets);
+      this.setStorage("budgets", budgets, email);
       return budgets[existingIdx];
     } else {
       const newBudget: Budget = {
@@ -563,24 +628,24 @@ class DemoStore {
         updated_at: new Date().toISOString(),
       };
       budgets.push(newBudget);
-      this.setStorage("budgets", budgets);
+      this.setStorage("budgets", budgets, email);
       return newBudget;
     }
   }
 
-  deleteBudget(id: string): void {
-    const budgets = this.getStorage("budgets", getInitialBudgets()).filter((b) => b.id !== id);
-    this.setStorage("budgets", budgets);
+  deleteBudget(id: string, email?: string): void {
+    const budgets = this.getStorage("budgets", getInitialBudgets(), email).filter((b) => b.id !== id);
+    this.setStorage("budgets", budgets, email);
   }
 
   // Transactions
-  getTransactions(filters: Partial<TransactionFilterInput> = {}): {
+  getTransactions(filters: Partial<TransactionFilterInput> = {}, email?: string): {
     items: TransactionWithCategory[];
     totalCount: number;
   } {
-    const txs = this.getStorage("transactions", getInitialTransactions());
-    const categories = this.getCategories();
-    const trips = this.getTrips();
+    const txs = this.getStorage("transactions", getInitialTransactions(), email);
+    const categories = this.getCategories(email);
+    const trips = this.getTrips(email);
 
     let filtered = [...txs];
 
@@ -643,10 +708,10 @@ class DemoStore {
     return { items, totalCount };
   }
 
-  addTransaction(input: TransactionFormInput): TransactionWithCategory {
-    const txs = this.getStorage("transactions", getInitialTransactions());
-    const categories = this.getCategories();
-    const trips = this.getTrips();
+  addTransaction(input: TransactionFormInput, email?: string): TransactionWithCategory {
+    const txs = this.getStorage("transactions", getInitialTransactions(), email);
+    const categories = this.getCategories(email);
+    const trips = this.getTrips(email);
 
     const newTx: Transaction = {
       id: `tx-${Date.now()}`,
@@ -663,7 +728,7 @@ class DemoStore {
     };
 
     txs.unshift(newTx);
-    this.setStorage("transactions", txs);
+    this.setStorage("transactions", txs, email);
 
     const cat = categories.find((c) => c.id === newTx.category_id);
     const trip = trips.find((tr) => tr.id === newTx.trip_id);
@@ -675,10 +740,10 @@ class DemoStore {
     };
   }
 
-  updateTransaction(id: string, input: TransactionFormInput): TransactionWithCategory {
-    const txs = this.getStorage("transactions", getInitialTransactions());
-    const categories = this.getCategories();
-    const trips = this.getTrips();
+  updateTransaction(id: string, input: TransactionFormInput, email?: string): TransactionWithCategory {
+    const txs = this.getStorage("transactions", getInitialTransactions(), email);
+    const categories = this.getCategories(email);
+    const trips = this.getTrips(email);
 
     const idx = txs.findIndex((t) => t.id === id);
     if (idx === -1) throw new Error("Transaction not found");
@@ -695,7 +760,7 @@ class DemoStore {
       updated_at: new Date().toISOString(),
     };
     txs[idx] = updated;
-    this.setStorage("transactions", txs);
+    this.setStorage("transactions", txs, email);
 
     const cat = categories.find((c) => c.id === updated.category_id);
     const trip = trips.find((tr) => tr.id === updated.trip_id);
@@ -707,14 +772,14 @@ class DemoStore {
     };
   }
 
-  deleteTransaction(id: string): void {
-    const txs = this.getStorage("transactions", getInitialTransactions()).filter((t) => t.id !== id);
-    this.setStorage("transactions", txs);
+  deleteTransaction(id: string, email?: string): void {
+    const txs = this.getStorage("transactions", getInitialTransactions(), email).filter((t) => t.id !== id);
+    this.setStorage("transactions", txs, email);
   }
 
   // Dashboard Aggregates
-  getDashboardSummary(month: number, year: number): MonthlySummary {
-    const txs = this.getStorage("transactions", getInitialTransactions());
+  getDashboardSummary(month: number, year: number, email?: string): MonthlySummary {
+    const txs = this.getStorage("transactions", getInitialTransactions(), email);
     let totalIncome = 0;
     let totalExpense = 0;
 
@@ -737,9 +802,9 @@ class DemoStore {
     };
   }
 
-  getCategoryBreakdown(month: number, year: number): CategoryBreakdownItem[] {
-    const txs = this.getStorage("transactions", getInitialTransactions());
-    const categories = this.getCategories();
+  getCategoryBreakdown(month: number, year: number, email?: string): CategoryBreakdownItem[] {
+    const txs = this.getStorage("transactions", getInitialTransactions(), email);
+    const categories = this.getCategories(email);
     const map = new Map<string, number>();
 
     let totalExpense = 0;
@@ -770,8 +835,8 @@ class DemoStore {
     return items.sort((a, b) => b.total_amount - a.total_amount);
   }
 
-  getSixMonthTrend(): SixMonthTrendItem[] {
-    const txs = this.getStorage("transactions", getInitialTransactions());
+  getSixMonthTrend(email?: string): SixMonthTrendItem[] {
+    const txs = this.getStorage("transactions", getInitialTransactions(), email);
     const trend: SixMonthTrendItem[] = [];
     const now = new Date();
 
@@ -794,8 +859,8 @@ class DemoStore {
         }
       });
 
-      // Provide realistic baseline if historical months are sparse
-      if (inc === 0 && exp === 0 && i > 0) {
+      // Provide realistic baseline if historical months are sparse ONLY for sample demo account
+      if (isSampleDemoAccount(email) && inc === 0 && exp === 0 && i > 0) {
         inc = 145000 + (i * 3000);
         exp = 68000 + (i * 2500);
       }
@@ -812,8 +877,8 @@ class DemoStore {
     return trend;
   }
 
-  getDailySpend(month: number, year: number): DailySpendItem[] {
-    const txs = this.getStorage("transactions", getInitialTransactions());
+  getDailySpend(month: number, year: number, email?: string): DailySpendItem[] {
+    const txs = this.getStorage("transactions", getInitialTransactions(), email);
     const daysInMonth = new Date(year, month, 0).getDate();
     const days: DailySpendItem[] = [];
 

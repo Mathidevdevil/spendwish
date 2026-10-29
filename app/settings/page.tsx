@@ -283,6 +283,29 @@ export default function SettingsPage() {
     }
   };
 
+  const handleResetToEmpty = async () => {
+    try {
+      if (isDemoMode()) {
+        demoStore.clearUserData(email);
+        toast.success("Workspace cleared! All transactions, budgets, and trips are now empty.");
+        router.refresh();
+        return;
+      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("transactions").delete().eq("user_id", user.id);
+      await supabase.from("budgets").delete().eq("user_id", user.id);
+      await supabase.from("trip_items").delete().eq("user_id", user.id);
+      await supabase.from("trips").delete().eq("user_id", user.id);
+      toast.success("Workspace cleared to empty.");
+      router.refresh();
+    } catch {
+      toast.error("Failed to reset workspace");
+    }
+  };
+
   return (
     <AppShell userEmail={email} userName={fullName}>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -461,18 +484,37 @@ export default function SettingsPage() {
               account data
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-between pt-1">
-            <p className="text-xs text-muted-foreground max-w-sm">
-              Once deleted, your financial records cannot be recovered.
-            </p>
-            <Button
-              variant="destructive"
-              onClick={() => setDeleteAccountOpen(true)}
-              className="rounded-xl text-xs font-semibold gap-1.5"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              <span>Wipe Data & Delete</span>
-            </Button>
+          <CardContent className="space-y-4 pt-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-destructive/20 bg-background/50">
+              <div>
+                <p className="text-xs font-semibold text-foreground">Reset Workspace to Empty</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Wipes all transactions, budgets, and trips back to 0 while keeping your account active.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetToEmpty}
+                className="shrink-0 text-xs font-semibold rounded-xl text-destructive hover:bg-destructive/10 border-destructive/30"
+              >
+                Reset to Empty
+              </Button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+              <p className="text-xs text-muted-foreground max-w-sm">
+                Permanently delete your profile and log out completely.
+              </p>
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteAccountOpen(true)}
+                className="rounded-xl text-xs font-semibold gap-1.5 shrink-0"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Wipe Data & Logout</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
