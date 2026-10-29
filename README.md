@@ -206,8 +206,94 @@ npm install
 ### 3. Run Database Migrations
 1. Open your Supabase Project dashboard.
 2. Navigate to the **SQL Editor**.
-3. Paste the contents of `supabase/migrations/20260101000000_init_schema.sql` and click **Run**.
-4. (Optional) Run `supabase/seed.sql` to populate sample transactions, budgets, and an ongoing Goa trip.
+3. Run `supabase/migrations/20260101000000_init_schema.sql` to initialize tables, RLS policies, aggregate RPCs, and indexes.
+4. Run `supabase/migrations/20260102000000_add_avatar_and_oauth_profile_trigger.sql` to add `avatar_url` to `profiles` and enable auto-syncing of full name and Google OAuth avatar metadata.
+5. (Optional) Run `supabase/seed.sql` to populate sample transactions, budgets, and an ongoing Goa trip.
+
+---
+
+## 🔐 Authentication Setup
+
+Follow this step-by-step checklist to configure Supabase Auth (Email/Password & Google OAuth) for Spendwise:
+
+### Part 1: Supabase Dashboard Configuration
+
+1. **Email Provider**:
+   - Go to **Authentication** → **Providers** → **Email**.
+   - Ensure **Email** is **Enabled**.
+   - **Confirm email**:
+     - *Local testing*: You can toggle **Confirm email** **OFF** if you want new signups to immediately sign in without checking an email inbox.
+     - *Production*: Turn **Confirm email** **ON**. When enabled, Spendwise automatically renders the friendly *"Check your inbox"* verification screen upon sign-up and emails the confirmation link.
+
+2. **URL Configuration**:
+   - Go to **Authentication** → **URL Configuration**.
+   - **Site URL**:
+     - Local dev: `http://localhost:3000`
+     - Production: `https://your-spendwise-domain.vercel.app`
+   - **Redirect URLs**: Add both of the following callback URLs:
+     - `http://localhost:3000/auth/callback`
+     - `https://your-spendwise-domain.vercel.app/auth/callback`
+
+3. **Google Provider**:
+   - Go to **Authentication** → **Providers** → **Google**.
+   - Toggle **Enable Google provider** to **ON**.
+   - Copy the **Callback URL (for OAuth)** shown in the provider card (format: `https://<your-project-ref>.supabase.co/auth/v1/callback`). You will paste this into Google Cloud Console in the next step.
+   - Paste the **Client ID** and **Client Secret** obtained from Google Cloud Console (instructions below) and click **Save**.
+
+---
+
+### Part 2: Google Cloud Console Configuration
+
+1. **Create Project & OAuth Consent Screen**:
+   - Open the [Google Cloud Console](https://console.cloud.google.com/).
+   - Create a new project (e.g., `Spendwise Finance`).
+   - Go to **APIs & Services** → **OAuth consent screen**.
+   - Select **External** and click **Create**.
+   - Fill in:
+     - **App name**: `Spendwise`
+     - **User support email**: Your email address
+     - **Developer contact information**: Your email address
+   - In **Scopes**, click **Add or Remove Scopes** and select:
+     - `.../auth/userinfo.email`
+     - `.../auth/userinfo.profile`
+     - `openid`
+   - Save and proceed to the dashboard. (For testing, add your test Google email under **Test users**).
+
+2. **Create OAuth 2.0 Client Credentials**:
+   - Go to **APIs & Services** → **Credentials**.
+   - Click **+ Create Credentials** → **OAuth client ID**.
+   - Select **Application type**: **Web application**.
+   - Set **Name**: `Spendwise Web Client`.
+   - **Authorized JavaScript origins**:
+     - `http://localhost:3000`
+     - `https://your-spendwise-domain.vercel.app` (your production domain)
+   - **Authorized redirect URIs**:
+     - Paste Supabase's callback URL:
+       `https://<your-project-ref>.supabase.co/auth/v1/callback`
+   - Click **Create**.
+   - Copy the generated **Client ID** and **Client Secret** into your Supabase Dashboard (**Authentication → Providers → Google**).
+
+---
+
+### Part 3: Account Linking & Identity Resolution
+
+- **Email + Google Linking Behavior**:
+  - If a user first creates an account with email and password (`user@example.com`) and later signs in via "Continue with Google" using that same email, Supabase Auth links both identities to the same `auth.users` row (provided the Google email is verified).
+  - The database trigger (`handle_new_user`) executes `ON CONFLICT (id) DO UPDATE`, automatically syncing their Google avatar (`avatar_url`) and display name into their Spendwise profile while preserving all existing transactions, categories, and budgets without duplicate rows or data loss.
+
+---
+
+### Part 4: Post-Configuration Verification Checklist
+
+After configuring Supabase and Google Cloud Console, verify the complete authentication lifecycle:
+
+- [x] **Sign Up (Email/Password)**: Register a new account at `/signup`, verify password complexity enforcement (min 8 chars, letter, number), and verify the "Check your inbox" screen or immediate login.
+- [x] **Log In (Email/Password)**: Sign in with valid credentials at `/login`, confirm redirect to `/dashboard`.
+- [x] **Invalid Login Error**: Attempt login with wrong password or nonexistent email, confirm friendly "Invalid email or password" error without exposing email existence.
+- [x] **Continue with Google**: Click Google OAuth button, authorize with Google account, verify redirect to `/dashboard` and that Google profile picture / avatar renders in top navigation and user menu.
+- [x] **Log Out**: Click **Log out** in the user menu, verify TanStack Query cache is cleared, session is terminated, and browser redirects to `/login`.
+- [x] **Route Protection**: Attempt to directly visit `/dashboard`, `/budgets`, or `/transactions` while logged out, confirm immediate redirect to `/login?next=...`.
+- [x] **Password Reset Flow**: Request reset on `/forgot-password`, click reset link in email (`/auth/callback?next=/reset-password`), enter new password on `/reset-password`, and confirm successful update.
 
 ### 4. Configure Environment
 ```bash
