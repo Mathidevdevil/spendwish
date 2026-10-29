@@ -20,6 +20,7 @@ import { useCategories } from "@/hooks/use-categories";
 import { useSaveBudget } from "@/hooks/use-budgets";
 import { useCurrency } from "@/components/providers/currency-provider";
 import { BudgetWithCategory } from "@/types/database";
+import { CategoryIcon } from "@/components/ui/category-icon";
 
 interface BudgetFormDialogProps {
   open: boolean;
@@ -74,11 +75,12 @@ export function BudgetFormDialog({
         year,
       });
     }
-  }, [open, initialData, month, year]);
+  }, [open, initialData, month, year, expenseCategories]);
 
   const onSubmit = async (data: BudgetFormInput) => {
     try {
       await saveMutation.mutateAsync({
+        id: initialData?.id,
         category_id: data.category_id,
         amount: data.amount,
         month: data.month,
@@ -103,26 +105,25 @@ export function BudgetFormDialog({
         month - 1
       ).toLocaleString("default", { month: "long" })} ${year}`}
     >
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-1">
         {/* Category */}
         <div className="space-y-1.5">
-          <Label htmlFor="budget-category">Category</Label>
+          <Label htmlFor="budget-category" className="text-xs font-semibold text-muted-foreground">
+            Category
+          </Label>
           <Select
             value={form.watch("category_id")}
             onValueChange={(val) => form.setValue("category_id", val)}
             disabled={!!initialData}
           >
-            <SelectTrigger id="budget-category">
+            <SelectTrigger id="budget-category" className="h-10 text-xs rounded-xl bg-surface">
               <SelectValue placeholder="Select an expense category" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-surface border-border/80">
               {expenseCategories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
+                <SelectItem key={c.id} value={c.id} className="text-xs">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: c.color || "#64748b" }}
-                    />
+                    <CategoryIcon categoryName={c.name} color={c.color} size="sm" />
                     <span>{c.name}</span>
                   </div>
                 </SelectItem>
@@ -130,7 +131,7 @@ export function BudgetFormDialog({
             </SelectContent>
           </Select>
           {form.formState.errors.category_id && (
-            <p className="text-xs text-destructive">
+            <p className="text-xs text-rose-400">
               {form.formState.errors.category_id.message}
             </p>
           )}
@@ -138,11 +139,11 @@ export function BudgetFormDialog({
 
         {/* Amount */}
         <div className="space-y-1.5">
-          <Label htmlFor="budget-amount">
-            Monthly Limit ({currency === "INR" ? "₹" : "$"})
+          <Label htmlFor="budget-amount" className="text-xs font-semibold text-muted-foreground">
+            Monthly Limit
           </Label>
-          <div className="relative">
-            <span className="absolute left-3.5 top-2.5 text-base font-bold text-muted-foreground">
+          <div className="relative flex items-center">
+            <span className="absolute left-3.5 text-lg font-bold text-muted-foreground pointer-events-none">
               {currency === "INR" ? "₹" : "$"}
             </span>
             <Input
@@ -150,33 +151,38 @@ export function BudgetFormDialog({
               type="number"
               step="1"
               placeholder="e.g. 15000"
-              className="pl-8 text-base font-semibold"
+              className="pl-9 h-11 text-lg font-bold font-sans tabular-nums rounded-xl bg-surface"
               {...form.register("amount", { valueAsNumber: true })}
             />
           </div>
           {form.formState.errors.amount && (
-            <p className="text-xs text-destructive">
+            <p className="text-xs text-rose-400">
               {form.formState.errors.amount.message}
             </p>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border/60">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="h-9 text-xs rounded-xl px-4"
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isPending} className="min-w-[120px]">
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="btn-gradient h-9 text-xs rounded-xl font-semibold px-5 min-w-[120px]"
+          >
             {isPending ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                 Saving...
               </>
             ) : initialData ? (
-              "Update Budget"
+              "Update Limit"
             ) : (
               "Save Budget"
             )}
