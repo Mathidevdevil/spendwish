@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CheckCircle2, PieChart } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, PieChart, Plus } from "lucide-react";
 import { useCurrency } from "@/components/providers/currency-provider";
 import { BudgetWithCategory } from "@/types/database";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ export function DashboardBudgetProgress({
     return (
       <div className="space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-14 bg-muted/40 animate-pulse rounded-xl" />
+          <div key={i} className="h-16 bg-surface-elevated/40 animate-pulse rounded-xl" />
         ))}
       </div>
     );
@@ -31,14 +32,21 @@ export function DashboardBudgetProgress({
 
   if (!budgets || budgets.length === 0) {
     return (
-      <div className="text-center py-8 px-4 rounded-xl border border-dashed border-border bg-card/40">
-        <PieChart className="h-8 w-8 mx-auto text-muted-foreground/60 mb-2 stroke-1" />
-        <p className="text-xs font-semibold text-foreground">No monthly budgets set</p>
-        <p className="text-[11px] text-muted-foreground mt-0.5 mb-3">
-          Set spending targets for Food, Rent, Shopping and get 80%/100% alerts.
-        </p>
-        <Button asChild variant="outline" size="sm" className="h-8 text-xs rounded-xl">
-          <Link href="/budgets">Create Budget</Link>
+      <div className="text-center py-6 px-4 rounded-xl border border-dashed border-border/80 bg-surface/40 flex flex-col items-center justify-center space-y-2.5">
+        <div className="h-9 w-9 rounded-full bg-surface-elevated flex items-center justify-center text-muted-foreground border border-border/60">
+          <PieChart className="h-4 w-4" />
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-foreground">No monthly budgets set</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
+            Set targets to receive 80% threshold warnings and avoid overspending.
+          </p>
+        </div>
+        <Button asChild variant="outline" size="sm" className="h-8 text-xs rounded-xl gap-1">
+          <Link href="/budgets">
+            <Plus className="h-3.5 w-3.5" />
+            <span>Create Budget</span>
+          </Link>
         </Button>
       </div>
     );
@@ -52,63 +60,72 @@ export function DashboardBudgetProgress({
       {topBudgets.map((b) => {
         const isExceeded = b.percentage >= 100;
         const isWarning = b.percentage >= 80 && !isExceeded;
+        const remaining = b.amount - b.spent;
 
         return (
           <div
             key={b.id}
-            className="p-3 rounded-xl border border-border bg-card space-y-2 text-xs"
+            className="p-3 rounded-xl border border-border/80 bg-surface/60 hover:bg-surface-elevated/70 transition-colors space-y-2 text-xs"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span
-                  className="h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ backgroundColor: b.category?.color || "#64748b" }}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <CategoryIcon
+                  categoryName={b.category?.name}
+                  color={b.category?.color}
+                  size="sm"
                 />
-                <span className="font-semibold text-foreground truncate max-w-[120px]">
+                <span className="font-semibold text-foreground truncate max-w-[130px] text-xs">
                   {b.category?.name || "Category"}
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {isExceeded ? (
                   <Badge
                     variant="destructive"
-                    className="text-[10px] px-1.5 py-0 h-4 font-bold gap-1"
+                    className="text-[10px] px-2 py-0 font-bold gap-1 rounded-full"
                   >
                     <AlertTriangle className="h-2.5 w-2.5" />
-                    <span>100%+ Exceeded</span>
+                    <span>Over limit</span>
                   </Badge>
                 ) : isWarning ? (
                   <Badge
                     variant="warning"
-                    className="text-[10px] px-1.5 py-0 h-4 font-bold gap-1"
+                    className="text-[10px] px-2 py-0 font-bold gap-1 rounded-full"
                   >
                     <AlertTriangle className="h-2.5 w-2.5" />
-                    <span>80%+ Warning</span>
+                    <span>80%+ Near</span>
                   </Badge>
                 ) : (
-                  <span className="text-[11px] font-semibold text-muted-foreground font-mono tabular-nums">
-                    {Math.round(b.percentage)}%
-                  </span>
+                  <Badge
+                    variant="income"
+                    className="text-[10px] px-2 py-0 font-semibold gap-1 rounded-full"
+                  >
+                    <CheckCircle2 className="h-2.5 w-2.5" />
+                    <span>On Track</span>
+                  </Badge>
                 )}
               </div>
             </div>
 
+            {/* Thin rounded progress bar */}
             <Progress
               value={Math.min(100, b.percentage)}
-              className="h-2 bg-secondary"
+              className="h-1.5 bg-surface-elevated rounded-full"
               indicatorClassName={
                 isExceeded
-                  ? "bg-rose-500"
+                  ? "bg-rose-400"
                   : isWarning
-                  ? "bg-amber-500"
-                  : "bg-primary"
+                  ? "bg-amber-400"
+                  : "bg-emerald-400"
               }
             />
 
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono tabular-nums">
-              <span>Spent {format(b.spent)}</span>
-              <span>Budget {format(b.amount)}</span>
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-sans tabular-nums pt-0.5">
+              <span>{format(b.spent)} of {format(b.amount)}</span>
+              <span className={remaining >= 0 ? "text-muted-foreground" : "text-rose-400 font-semibold"}>
+                {remaining >= 0 ? `${format(remaining)} left` : `${format(Math.abs(remaining))} over`}
+              </span>
             </div>
           </div>
         );
@@ -119,7 +136,7 @@ export function DashboardBudgetProgress({
           href="/budgets"
           className="inline-flex items-center text-xs font-semibold text-primary hover:underline gap-1"
         >
-          <span>View all budgets</span>
+          <span>All budgets</span>
           <ArrowRight className="h-3 w-3" />
         </Link>
       </div>

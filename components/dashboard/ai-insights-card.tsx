@@ -2,14 +2,13 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  Coins,
   Lightbulb,
   Plus,
   RefreshCw,
   ShieldCheck,
   Sparkles,
+  Zap,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MonthlyInsightsOutput } from "@/schemas/ai";
 import { transactionModal } from "@/hooks/use-transaction-modal";
@@ -39,7 +38,13 @@ export function AiInsightsCard({
     Number(summary.total_expense) === 0;
 
   const { data, isLoading, isRefetching, refetch } = useQuery<MonthlyInsightsOutput>({
-    queryKey: ["ai-monthly-insights", month, year, summary?.total_income, summary?.total_expense],
+    queryKey: [
+      "ai-monthly-insights",
+      month,
+      year,
+      summary?.total_income,
+      summary?.total_expense,
+    ],
     queryFn: async () => {
       const res = await fetch("/api/ai/monthly-insights", {
         method: "POST",
@@ -63,112 +68,113 @@ export function AiInsightsCard({
 
   const loading = (isLoading || isRefetching || isSummaryLoading) && !hasNoData;
 
-  // Empty state when user has zero income and zero expenses for selected period
+  // Tasteful empty state when no activity recorded
   if (hasNoData) {
     return (
-      <Card className="rounded-2xl border-dashed border-border bg-card/50 shadow-none overflow-hidden">
-        <CardContent className="py-8 px-4 flex flex-col items-center justify-center text-center space-y-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <Coins className="h-5 w-5 text-primary" />
+      <div className="rounded-[20px] border border-dashed border-border/80 bg-surface/40 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5 text-center sm:text-left">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Sparkles className="h-5 w-5" />
           </div>
-          <div className="space-y-1 max-w-md">
+          <div>
             <h3 className="text-sm font-semibold text-foreground">
-              No transactions logged for this month
+              No transactions recorded this month
             </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Add your income and expenses to unlock AI-driven financial advice,
-              savings analysis, and spending pattern recommendations.
+            <p className="text-xs text-muted-foreground mt-0.5 max-w-md">
+              Log income or daily expenses to unlock AI cash flow analysis, savings health checks, and budget suggestions.
             </p>
           </div>
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => transactionModal.open()}
-            className="rounded-xl font-semibold gap-1.5 h-9 text-xs mt-1"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Add First Entry</span>
-          </Button>
-        </CardContent>
-      </Card>
+        </div>
+
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => transactionModal.open()}
+          className="btn-gradient font-semibold rounded-xl text-xs h-8.5 shrink-0"
+        >
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          <span>Add First Entry</span>
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card className="rounded-2xl border-primary/20 bg-gradient-to-br from-primary/5 via-card to-background shadow-sm overflow-hidden">
-      <CardHeader className="pb-3 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
-            <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+    <div className="rounded-[20px] p-[1px] bg-gradient-to-r from-emerald-500/30 via-cyan-500/20 to-border/40 shadow-xs">
+      <div
+        className="rounded-[19px] bg-surface p-5 sm:p-6 space-y-4"
+        style={{
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight)",
+        }}
+      >
+        {/* Header with Title and Actions */}
+        <div className="flex items-center justify-between gap-3 border-b border-border/50 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
               <Sparkles className="h-4 w-4" />
             </div>
-            <span>Smart Financial Insights</span>
-          </CardTitle>
-
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-muted-foreground font-medium">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              <span>Aggregated & Private</span>
+            <span className="text-sm font-bold text-foreground tracking-tight">
+              AI Financial Insights
             </span>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => refetch()}
-              disabled={loading}
-              className="h-8 text-xs gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-              />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-muted-foreground font-semibold px-2 py-0.5 rounded-full bg-surface-elevated border border-border/60">
+              <ShieldCheck className="h-3 w-3 text-emerald-400" />
+              <span>Private</span>
+            </span>
           </div>
-        </div>
-      </CardHeader>
 
-      <CardContent className="pt-4 space-y-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={loading}
+            className="h-7 text-xs gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
+          >
+            <RefreshCw
+              className={`h-3 w-3 ${loading ? "animate-spin text-primary" : ""}`}
+            />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+        </div>
+
+        {/* Content Area */}
         {loading ? (
           <div className="space-y-3">
-            <div className="h-4 bg-muted/60 animate-pulse rounded-md w-3/4" />
-            <div className="h-3 bg-muted/40 animate-pulse rounded-md w-full" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2">
-              <div className="h-16 bg-muted/30 animate-pulse rounded-xl" />
-              <div className="h-16 bg-muted/30 animate-pulse rounded-xl" />
-              <div className="h-16 bg-muted/30 animate-pulse rounded-xl" />
+            <div className="h-4 bg-surface-elevated/60 animate-pulse rounded-md w-3/4" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+              <div className="h-20 bg-surface-elevated/40 animate-pulse rounded-xl" />
+              <div className="h-20 bg-surface-elevated/40 animate-pulse rounded-xl" />
+              <div className="h-20 bg-surface-elevated/40 animate-pulse rounded-xl" />
             </div>
           </div>
         ) : (
-          <>
+          <div className="space-y-3.5">
+            {/* One Summary Sentence */}
             <p className="text-sm font-medium text-foreground/90 leading-relaxed">
               {data?.summary}
             </p>
 
+            {/* 3 Suggestion Rows */}
             {data?.suggestions && data.suggestions.length > 0 && (
-              <div className="space-y-2 pt-1">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Lightbulb className="h-3.5 w-3.5 text-amber-500" />
-                  <span>Practical Financial Suggestions</span>
-                </h4>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-                  {data.suggestions.map((suggestion, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl bg-card border border-border/80 shadow-xs text-xs text-foreground/80 leading-relaxed hover:border-primary/30 transition-colors"
-                    >
-                      <span className="font-semibold text-primary block mb-0.5">
-                        Tip #{idx + 1}
-                      </span>
-                      {suggestion}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                {data.suggestions.slice(0, 3).map((suggestion, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl bg-surface-elevated/60 border border-border/80 hover:border-emerald-500/30 transition-all text-xs space-y-1 group"
+                  >
+                    <div className="flex items-center gap-1.5 text-primary font-semibold text-[11px]">
+                      <Lightbulb className="h-3.5 w-3.5 text-amber-400" />
+                      <span>Observation #{idx + 1}</span>
                     </div>
-                  ))}
-                </div>
+                    <p className="text-muted-foreground leading-relaxed text-[11px] group-hover:text-foreground transition-colors">
+                      {suggestion}
+                    </p>
+                  </div>
+                ))}
               </div>
             )}
-          </>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

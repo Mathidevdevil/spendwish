@@ -56,28 +56,33 @@ export function MonthYearPicker({
   };
 
   return (
-    <div className="flex items-center gap-1.5 sm:gap-2 bg-card border border-border p-1 rounded-xl shadow-sm">
+    <div
+      className="inline-flex items-center gap-1 bg-surface border border-border/80 p-1 rounded-xl shadow-xs"
+      style={{
+        boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05), var(--inner-highlight)",
+      }}
+    >
       <Button
         variant="ghost"
         size="icon"
         onClick={handlePrev}
-        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+        className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg"
         title="Previous Month"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <ChevronLeft className="h-3.5 w-3.5" />
       </Button>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center">
         <Select
           value={String(month)}
           onValueChange={(val) => onChange(Number(val), year)}
         >
-          <SelectTrigger className="h-8 border-none bg-transparent px-2 text-xs font-semibold shadow-none focus:ring-0">
+          <SelectTrigger className="h-7 border-none bg-transparent px-2 text-xs font-semibold shadow-none focus:ring-0 text-foreground">
             <SelectValue>{MONTHS[month - 1]}</SelectValue>
           </SelectTrigger>
-          <SelectContent align="start">
+          <SelectContent align="start" className="bg-surface border-border/80">
             {MONTHS.map((name, idx) => (
-              <SelectItem key={name} value={String(idx + 1)}>
+              <SelectItem key={name} value={String(idx + 1)} className="text-xs">
                 {name}
               </SelectItem>
             ))}
@@ -88,12 +93,12 @@ export function MonthYearPicker({
           value={String(year)}
           onValueChange={(val) => onChange(month, Number(val))}
         >
-          <SelectTrigger className="h-8 border-none bg-transparent px-2 text-xs font-semibold shadow-none focus:ring-0">
+          <SelectTrigger className="h-7 border-none bg-transparent px-2 text-xs font-semibold shadow-none focus:ring-0 text-muted-foreground">
             <SelectValue>{year}</SelectValue>
           </SelectTrigger>
-          <SelectContent align="end">
+          <SelectContent align="end" className="bg-surface border-border/80">
             {years.map((y) => (
-              <SelectItem key={y} value={String(y)}>
+              <SelectItem key={y} value={String(y)} className="text-xs">
                 {y}
               </SelectItem>
             ))}
@@ -105,10 +110,10 @@ export function MonthYearPicker({
         variant="ghost"
         size="icon"
         onClick={handleNext}
-        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+        className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg"
         title="Next Month"
       >
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-3.5 w-3.5" />
       </Button>
     </div>
   );
