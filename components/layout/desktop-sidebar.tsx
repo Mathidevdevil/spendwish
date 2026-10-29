@@ -65,7 +65,7 @@ export function DesktopSidebar() {
           {NAVIGATION_ITEMS.map((item) => {
             const isActive =
               item.href === "/"
-                ? pathname === "/"
+                ? pathname === "/" || pathname === "/dashboard"
                 : pathname.startsWith(item.href);
             const Icon = item.icon;
 

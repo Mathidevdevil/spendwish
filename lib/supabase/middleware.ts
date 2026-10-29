@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { sanitizeRedirectPath } from "@/lib/utils";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -47,36 +48,39 @@ export async function updateSession(request: NextRequest) {
     "/login",
     "/signup",
     "/forgot-password",
+    "/reset-password",
   ];
   const isAuthRoute = authRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
+    request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(`${route}/`)
   );
 
   const publicRoutes = [
     ...authRoutes,
-    "/auth/callback",
-    "/auth/reset-password",
     "/manifest.webmanifest",
+    "/favicon.ico",
   ];
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+  const isPublicRoute =
+    publicRoutes.some((route) =>
+      request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(`${route}/`)
+    ) || request.nextUrl.pathname.startsWith("/auth");
 
   // Check for Demo Mode session cookie
   const demoCookie = request.cookies.get("spendwise_demo_session");
   const isDemoAuthenticated = demoCookie?.value === "true";
 
   if (isDemoAuthenticated) {
-    // If already authenticated in demo mode, redirect away from login/signup/forgot-password to dashboard
-    if (isAuthRoute) {
+    // If already authenticated in demo mode, redirect away from login/signup to /dashboard
+    if (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") {
       const url = request.nextUrl.clone();
-      url.pathname = "/";
+      const nextParam = request.nextUrl.searchParams.get("next") || request.nextUrl.searchParams.get("redirect");
+      url.pathname = sanitizeRedirectPath(nextParam, "/dashboard");
+      url.search = "";
       return NextResponse.redirect(url);
     }
     return supabaseResponse;
   }
 
-  // If using placeholder/demo Supabase URL, do not attempt to contact non-existent endpoint
+  // If using placeholder/demo Supabase URL and unauthenticated, route to login
   const isPlaceholderUrl =
     supabaseUrl.includes("spendwise-demo.supabase.co") ||
     supabaseUrl.includes("placeholder") ||
@@ -86,12 +90,14 @@ export async function updateSession(request: NextRequest) {
     if (!isPublicRoute) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
-      url.searchParams.set("redirect", request.nextUrl.pathname);
+      const originalPath = request.nextUrl.pathname + request.nextUrl.search;
+      url.searchParams.set("next", originalPath);
       return NextResponse.redirect(url);
     }
     return supabaseResponse;
   }
 
+  // Live Supabase authentication verification
   let user = null;
   try {
     const getUserPromise = supabase.auth.getUser();
@@ -104,16 +110,21 @@ export async function updateSession(request: NextRequest) {
     user = null;
   }
 
+  // Unauthenticated users hitting protected routes go to /login?next=<original path>
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirect", request.nextUrl.pathname);
+    const originalPath = request.nextUrl.pathname + request.nextUrl.search;
+    url.searchParams.set("next", originalPath);
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicRoute && !request.nextUrl.pathname.startsWith("/auth")) {
+  // Authenticated users visiting /login or /signup go to /dashboard (or next)
+  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    const nextParam = request.nextUrl.searchParams.get("next") || request.nextUrl.searchParams.get("redirect");
+    url.pathname = sanitizeRedirectPath(nextParam, "/dashboard");
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

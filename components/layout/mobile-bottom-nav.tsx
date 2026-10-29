@@ -51,7 +51,7 @@ export function MobileBottomNav() {
         {MOBILE_NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
-              ? pathname === "/"
+              ? pathname === "/" || pathname === "/dashboard"
               : pathname.startsWith(item.href);
           const Icon = item.icon;
 

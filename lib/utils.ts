@@ -89,3 +89,40 @@ export function formatDate(
     day: "numeric",
   });
 }
+
+/**
+ * Validates and sanitizes a redirect path to prevent open-redirect vulnerabilities.
+ * Only allows relative paths starting with a single '/' and rejects protocol-relative,
+ * backslash-escaped, or absolute URLs.
+ */
+export function sanitizeRedirectPath(
+  path?: string | null,
+  fallback = "/dashboard"
+): string {
+  if (!path || typeof path !== "string") {
+    return fallback;
+  }
+
+  const trimmed = path.trim();
+
+  // Must start with '/' and must not start with '//' or contain '\'
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\")) {
+    return fallback;
+  }
+
+  // Reject newlines or control characters
+  if (/[\r\n\0]/.test(trimmed)) {
+    return fallback;
+  }
+
+  // Ensure it doesn't parse as an absolute URL with an external protocol
+  try {
+    const parsed = new URL(trimmed, "http://localhost");
+    if (parsed.origin !== "http://localhost") {
+      return fallback;
+    }
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return fallback;
+  }
+}
