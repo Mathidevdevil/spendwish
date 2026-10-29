@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Compass, Filter, Plane, Plus } from "lucide-react";
-import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TripCard } from "@/components/trips/trip-card";

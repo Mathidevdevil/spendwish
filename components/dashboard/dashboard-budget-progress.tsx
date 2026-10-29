@@ -87,7 +87,7 @@ export function DashboardBudgetProgress({
                     <span>80%+ Warning</span>
                   </Badge>
                 ) : (
-                  <span className="text-[11px] font-semibold text-muted-foreground">
+                  <span className="text-[11px] font-semibold text-muted-foreground font-mono tabular-nums">
                     {Math.round(b.percentage)}%
                   </span>
                 )}
@@ -106,7 +106,7 @@ export function DashboardBudgetProgress({
               }
             />
 
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono tabular-nums">
               <span>Spent {format(b.spent)}</span>
               <span>Budget {format(b.amount)}</span>
             </div>

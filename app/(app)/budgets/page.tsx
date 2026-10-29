@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  PieChart as PieChartIcon,
-  Plus,
-  ShieldAlert,
-  Wallet,
-} from "lucide-react";
-import { AppShell } from "@/components/layout/app-shell";
+import { AlertTriangle, CheckCircle2, PieChart as PieChartIcon, Plus, ShieldAlert, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MonthYearPicker } from "@/components/dashboard/month-year-picker";
@@ -89,7 +81,7 @@ export default function BudgetsPage() {
               <span className="text-xs font-semibold text-muted-foreground">
                 Total Budgeted
               </span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-foreground font-mono tabular-nums">
                 {format(totalBudgeted)}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
@@ -103,10 +95,10 @@ export default function BudgetsPage() {
               <span className="text-xs font-semibold text-muted-foreground">
                 Total Spent
               </span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-rose-500">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-rose-500 font-mono tabular-nums">
                 {format(totalSpent)}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-[11px] text-muted-foreground mt-1 font-mono tabular-nums">
                 {overallPercentage}% of aggregate limits
               </p>
             </CardContent>
@@ -118,7 +110,7 @@ export default function BudgetsPage() {
                 Remaining Limit
               </span>
               <div
-                className={`mt-2 text-xl sm:text-2xl font-bold tracking-tight ${
+                className={`mt-2 text-xl sm:text-2xl font-bold tracking-tight font-mono tabular-nums ${
                   remainingBudget >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"
                 }`}
               >

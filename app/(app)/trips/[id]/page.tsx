@@ -20,7 +20,6 @@ import {
   Trash2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,30 +68,26 @@ export default function TripDetailPage({
 
   if (isLoading) {
     return (
-      <AppShell>
-        <div className="space-y-6 animate-pulse">
-          <Skeleton className="h-10 w-48" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-28 rounded-2xl" />
-            ))}
-          </div>
-          <Skeleton className="h-64 rounded-2xl" />
+      <div className="space-y-6 animate-pulse">
+        <Skeleton className="h-10 w-48" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-2xl" />
+          ))}
         </div>
-      </AppShell>
+        <Skeleton className="h-64 rounded-2xl" />
+      </div>
     );
   }
 
   if (!data?.trip) {
     return (
-      <AppShell>
-        <div className="p-12 text-center">
-          <h2 className="text-lg font-bold">Trip not found</h2>
-          <Button asChild className="mt-4" variant="outline">
-            <Link href="/trips">Return to Trips</Link>
-          </Button>
-        </div>
-      </AppShell>
+      <div className="p-12 text-center">
+        <h2 className="text-lg font-bold">Trip not found</h2>
+        <Button asChild className="mt-4" variant="outline">
+          <Link href="/trips">Return to Trips</Link>
+        </Button>
+      </div>
     );
   }
 
@@ -214,7 +209,7 @@ export default function TripDetailPage({
               <span className="text-xs font-semibold text-muted-foreground">
                 Trip Budget
               </span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-foreground font-mono tabular-nums">
                 {format(trip.total_budget)}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
@@ -229,10 +224,10 @@ export default function TripDetailPage({
               <span className="text-xs font-semibold text-muted-foreground">
                 Itinerary Estimates
               </span>
-              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-primary">
+              <div className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-primary font-mono tabular-nums">
                 {format(trip.itinerary_estimated_cost)}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-[11px] text-muted-foreground mt-1 font-mono tabular-nums">
                 {itinerary.length} scheduled activities
               </p>
             </CardContent>
@@ -245,13 +240,13 @@ export default function TripDetailPage({
                 Actual Spend
               </span>
               <div
-                className={`mt-2 text-xl sm:text-2xl font-bold tracking-tight ${
+                className={`mt-2 text-xl sm:text-2xl font-bold tracking-tight font-mono tabular-nums ${
                   isOver ? "text-destructive" : "text-foreground"
                 }`}
               >
                 {format(trip.actual_spend)}
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-[11px] text-muted-foreground mt-1 font-mono tabular-nums">
                 {Math.round(trip.percent_budget_used)}% of budget used
               </p>
             </CardContent>
@@ -264,7 +259,7 @@ export default function TripDetailPage({
                 Remaining Budget
               </span>
               <div
-                className={`mt-2 text-xl sm:text-2xl font-bold tracking-tight ${
+                className={`mt-2 text-xl sm:text-2xl font-bold tracking-tight font-mono tabular-nums ${
                   isOver
                     ? "text-destructive"
                     : "text-emerald-600 dark:text-emerald-400"

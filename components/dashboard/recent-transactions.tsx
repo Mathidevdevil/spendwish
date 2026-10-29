@@ -82,10 +82,10 @@ export function RecentTransactions({
             </div>
 
             <div
-              className={`font-bold tracking-tight text-right ${
+              className={`font-bold tracking-tight text-right font-mono tabular-nums ${
                 isIncome
                   ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-foreground"
+                  : "text-rose-600 dark:text-rose-400"
               }`}
             >
               {isIncome ? "+" : "-"}

@@ -131,15 +131,15 @@ export function BudgetCard({ budget, onEdit }: BudgetCardProps) {
           {/* Numbers */}
           <div className="flex items-baseline justify-between text-xs">
             <div>
-              <span className="text-xl font-bold tracking-tight text-foreground">
+              <span className="text-xl font-bold tracking-tight text-foreground font-mono tabular-nums">
                 {format(spent)}
               </span>
-              <span className="text-muted-foreground ml-1.5">
+              <span className="text-muted-foreground ml-1.5 font-mono tabular-nums">
                 of {format(total)}
               </span>
             </div>
             <span
-              className={`font-bold text-sm ${
+              className={`font-bold text-sm font-mono tabular-nums ${
                 isOver
                   ? "text-destructive"
                   : isWarning
@@ -166,7 +166,7 @@ export function BudgetCard({ budget, onEdit }: BudgetCardProps) {
 
           {/* Footer details */}
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-0.5">
-            <span>
+            <span className="font-mono tabular-nums">
               {isOver
                 ? `Overspent by ${format(Math.abs(remaining))}`
                 : `${format(remaining)} remaining`}

@@ -117,8 +117,8 @@ export function TripCard({ trip, onEdit }: TripCardProps) {
 
           {/* Financial summary bar */}
           <div className="space-y-2 pt-2 border-t border-border/70">
-            <div className="flex items-baseline justify-between text-xs">
-              <span className="text-muted-foreground font-medium">Spent:</span>
+            <div className="flex items-baseline justify-between text-xs font-mono tabular-nums">
+              <span className="text-muted-foreground font-medium font-sans">Spent:</span>
               <div>
                 <span className="font-bold text-sm text-foreground">
                   {format(spent)}
@@ -137,7 +137,7 @@ export function TripCard({ trip, onEdit }: TripCardProps) {
               }
             />
 
-            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <div className="flex items-center justify-between text-[11px] text-muted-foreground font-mono tabular-nums">
               <span>{percentage}% budget used</span>
               <span className={isOver ? "text-destructive font-semibold" : ""}>
                 {isOver

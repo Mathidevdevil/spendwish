@@ -71,8 +71,8 @@ export function DashboardView() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
             Financial Dashboard
           </h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Real-time cash flow, category breakdowns, and budget warnings
+          <p className="text-muted-foreground text-xs sm:text-sm mt-0.5">
+            Monthly cash flow, category distribution, and budget tracking
           </p>
         </div>
 
@@ -96,8 +96,8 @@ export function DashboardView() {
         </div>
       </div>
 
-      {/* KPI Cards: Total Income, Total Expense, Net Savings, Savings Rate % */}
-      <SummaryCards summary={summary} isLoading={isLoading} />
+      {/* Hero Balance Card & KPI Cards */}
+      <SummaryCards summary={summary} trend={trend} isLoading={isLoading} />
 
       {/* AI Financial Insights Widget */}
       <AiInsightsCard
