@@ -43,3 +43,4 @@ describe("sanitizeRedirectPath", () => {
     expect(sanitizeRedirectPath("/dashboard\nLocation:http://evil.com")).toBe("/dashboard");
   });
 });
+

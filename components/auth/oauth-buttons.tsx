@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,7 @@ import { Loader2 } from "lucide-react";
 import { enableDemoMode } from "@/lib/demo-data";
 import { sanitizeRedirectPath } from "@/lib/utils";
 
-export function GoogleOAuthButton({
-  text = "Continue with Google",
-}: {
-  text?: string;
-}) {
+function GoogleOAuthButtonInner({ text }: { text: string }) {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const rawNext = searchParams.get("next") || searchParams.get("redirect");
@@ -30,7 +26,6 @@ export function GoogleOAuthButton({
         process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
 
       if (isPlaceholderUrl) {
-        // Fallback for demo/offline environment without active OAuth provider
         enableDemoMode("google.user@spendwise.app", "Google User");
         await fetch("/api/auth/demo-session", {
           method: "POST",
@@ -108,5 +103,29 @@ export function GoogleOAuthButton({
       )}
       <span>{text}</span>
     </Button>
+  );
+}
+
+export function GoogleOAuthButton({
+  text = "Continue with Google",
+}: {
+  text?: string;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <Button
+          type="button"
+          variant="outline"
+          disabled
+          className="w-full flex items-center justify-center gap-3 h-11 text-sm font-medium border-border rounded-xl"
+        >
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <span>{text}</span>
+        </Button>
+      }
+    >
+      <GoogleOAuthButtonInner text={text} />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { enableDemoMode } from "@/lib/demo-data";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -87,7 +87,6 @@ export default function SignUpPage() {
         process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
 
       if (isPlaceholderUrl) {
-        // In local mock/demo mode without active backend, provide seamless demo transition
         toast.info("Supabase backend placeholder active. Initializing account...");
         await handleDemoLogin(data.email, data.fullName);
         return;
@@ -149,7 +148,6 @@ export default function SignUpPage() {
         toast.success("Account created successfully!");
         window.location.href = "/dashboard";
       } else if (authData?.user) {
-        // Confirmation email flow - show "Check your inbox" screen
         setCheckInboxEmail(data.email);
         toast.success("Confirmation email sent! Please check your inbox.");
       }
@@ -351,7 +349,11 @@ export default function SignUpPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-                  aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                  aria-label={
+                    showConfirmPassword
+                      ? "Hide confirm password"
+                      : "Show confirm password"
+                  }
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -395,5 +397,22 @@ export default function SignUpPage() {
         </div>
       )}
     </AuthCard>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense
+      fallback={
+        <AuthCard
+          title="Create an account"
+          description="Track expenses, create monthly budgets, and manage your travel"
+        >
+          <div className="h-48 animate-pulse bg-muted rounded-xl" />
+        </AuthCard>
+      }
+    >
+      <SignUpForm />
+    </Suspense>
   );
 }
