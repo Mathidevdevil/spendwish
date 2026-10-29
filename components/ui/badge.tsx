@@ -8,22 +8,24 @@ const badgeVariants = cva(
     variants: {
       variant: {
         DEFAULT:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+          "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 shadow-xs",
         default:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+          "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 shadow-xs",
         secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          "border-border/80 bg-surface-elevated text-foreground",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
+          "border-rose-500/20 bg-rose-500/10 text-rose-400 shadow-xs",
+        outline: "border-border/80 text-muted-foreground",
         success:
-          "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium",
+          "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-semibold",
         warning:
-          "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium",
+          "border-amber-500/20 bg-amber-500/10 text-amber-400 font-semibold",
         expense:
-          "border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-medium",
+          "border-rose-500/20 bg-rose-500/10 text-rose-400 font-semibold",
         income:
-          "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium",
+          "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 font-semibold",
+        info:
+          "border-cyan-500/20 bg-cyan-500/10 text-cyan-400 font-semibold",
       },
     },
     defaultVariants: {

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { getInitials } from "@/lib/avatar";
 
 interface UserMenuProps {
   email?: string | null;
@@ -50,13 +51,7 @@ export function UserMenu({ email, name, avatarUrl }: UserMenuProps) {
   };
 
   const displayName = name || email?.split("@")[0] || "User";
-  const initials = displayName
-    .split(" ")
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials = getInitials(name, email);
 
   return (
     <DropdownMenu>

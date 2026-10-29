@@ -3,15 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Compass,
   LayoutDashboard,
-  Receipt,
+  PanelLeftClose,
+  PanelLeftOpen,
   PieChart,
-  Plane,
+  Receipt,
   Settings,
   Sparkles,
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getInitials } from "@/lib/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const NAVIGATION_ITEMS = [
   {
@@ -32,7 +36,7 @@ export const NAVIGATION_ITEMS = [
   {
     title: "Travel Plans",
     href: "/trips",
-    icon: Plane,
+    icon: Compass,
   },
   {
     title: "Settings",
@@ -41,27 +45,73 @@ export const NAVIGATION_ITEMS = [
   },
 ];
 
-export function DesktopSidebar() {
+interface DesktopSidebarProps {
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  userEmail?: string | null;
+  userName?: string | null;
+  avatarUrl?: string | null;
+  isDemo?: boolean;
+}
+
+export function DesktopSidebar({
+  isCollapsed,
+  onToggleCollapse,
+  userEmail,
+  userName,
+  avatarUrl,
+  isDemo = false,
+}: DesktopSidebarProps) {
   const pathname = usePathname();
+  const displayName = userName || (userEmail ? userEmail.split("@")[0] : "Account");
+  const initials = getInitials(userName, userEmail);
 
   return (
-    <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-border bg-card/60 backdrop-blur-md z-30">
-      <div className="flex h-16 items-center px-6 border-b border-border gap-3">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center text-white shadow-md shadow-primary/20">
-          <Wallet className="h-5 w-5" />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-bold text-lg leading-tight tracking-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
-            Spendwise
-          </span>
-          <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
-            Finance & Travel
-          </span>
-        </div>
+    <aside
+      className={cn(
+        "hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 border-r border-border/70 bg-card z-30 transition-all duration-200 select-none",
+        isCollapsed ? "w-[72px]" : "w-[248px]"
+      )}
+    >
+      {/* Top Header / Brand */}
+      <div
+        className={cn(
+          "flex h-16 items-center border-b border-border/70 px-4",
+          isCollapsed ? "justify-center" : "justify-between"
+        )}
+      >
+        <Link href="/" className="flex items-center gap-3 min-w-0">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-400 flex items-center justify-center text-slate-950 shadow-md shadow-emerald-500/20 shrink-0 font-bold">
+            <Wallet className="h-5 w-5" />
+          </div>
+          {!isCollapsed && (
+            <div className="flex flex-col min-w-0">
+              <span className="font-bold text-base leading-tight tracking-tight text-foreground truncate">
+                Spendwise
+              </span>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-muted-foreground">
+                Fintech Engine
+              </span>
+            </div>
+          )}
+        </Link>
+
+        {!isCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-elevated flex items-center justify-center transition-colors"
+            title="Collapse sidebar"
+            aria-label="Collapse sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
-      <div className="flex-1 flex flex-col justify-between p-4 overflow-y-auto">
-        <nav className="space-y-1.5" aria-label="Main Navigation">
+      {/* Navigation Items */}
+      <div className="flex-1 flex flex-col justify-between p-3 overflow-y-auto">
+        <nav className="space-y-1" aria-label="Main Navigation">
           {NAVIGATION_ITEMS.map((item) => {
             const isActive =
               item.href === "/"
@@ -75,34 +125,86 @@ export function DesktopSidebar() {
                 href={item.href}
                 prefetch={true}
                 className={cn(
-                  "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group",
+                  "relative flex items-center gap-3 rounded-xl transition-all group font-medium text-xs sm:text-sm",
+                  isCollapsed ? "justify-center p-3" : "px-3 py-2.5",
                   isActive
-                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25 font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                    ? "bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated"
                 )}
+                title={isCollapsed ? item.title : undefined}
               >
+                {/* Thin accent indicator on active */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-gradient-to-b from-emerald-400 to-cyan-400" />
+                )}
+
                 <Icon
                   className={cn(
-                    "h-4 w-4 transition-transform group-hover:scale-110",
-                    isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    "h-4 w-4 shrink-0 transition-transform group-hover:scale-105",
+                    isActive ? "text-emerald-400" : "text-muted-foreground group-hover:text-foreground"
                   )}
                 />
-                <span>{item.title}</span>
+
+                {!isCollapsed && <span className="truncate">{item.title}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div className="pt-4 border-t border-border/60">
-          <div className="p-3.5 rounded-xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 text-xs">
-            <div className="flex items-center gap-2 font-semibold text-primary mb-1">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Smart AI Finance</span>
-            </div>
-            <p className="text-muted-foreground text-[11px] leading-relaxed">
-              Parse voice or text receipts and get aggregated monthly insights.
-            </p>
+        {/* Expand button when collapsed */}
+        {isCollapsed && (
+          <div className="pt-2 flex justify-center">
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface-elevated flex items-center justify-center transition-colors"
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </button>
           </div>
+        )}
+
+        {/* Bottom User Card */}
+        <div className="pt-3 border-t border-border/70 mt-auto">
+          <Link
+            href="/settings"
+            className={cn(
+              "flex items-center gap-2.5 rounded-xl p-2 transition-colors hover:bg-surface-elevated group",
+              isCollapsed && "justify-center p-1.5"
+            )}
+            title={isCollapsed ? displayName : undefined}
+          >
+            <Avatar className="h-8 w-8 rounded-full border border-border/80 shrink-0">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+              <AvatarFallback className="bg-surface-elevated text-[11px] font-bold text-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <p className="text-xs font-semibold text-foreground truncate group-hover:text-emerald-400 transition-colors">
+                    {displayName}
+                  </p>
+                  {isDemo ? (
+                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
+                      Demo
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+                      Pro
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground truncate font-mono">
+                  {userEmail || "user@spendwise.app"}
+                </p>
+              </div>
+            )}
+          </Link>
         </div>
       </div>
     </aside>

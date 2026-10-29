@@ -16,12 +16,21 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-geist-sans)", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "monospace"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        surface: {
+          DEFAULT: "hsl(var(--surface))",
+          foreground: "hsl(var(--surface-foreground))",
+          elevated: "hsl(var(--surface-elevated))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -50,25 +59,21 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        emerald: {
-          50: "#ecfdf5",
-          100: "#d1fae5",
-          500: "#10b981",
-          600: "#059669",
-          700: "#047857",
-        },
-        rose: {
-          50: "#fff1f2",
-          100: "#ffe4e6",
-          500: "#f43f5e",
-          600: "#e11d48",
-          700: "#be123c",
-        },
+        income: "hsl(var(--income))",
+        expense: "hsl(var(--expense))",
+        warning: "hsl(var(--warning))",
+        info: "hsl(var(--info))",
       },
       borderRadius: {
+        hero: "28px",
+        card: "20px",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        "glow-accent": "0 0 24px -4px rgba(52, 211, 153, 0.25)",
+        "glow-rose": "0 0 24px -4px rgba(251, 113, 133, 0.2)",
       },
       keyframes: {
         "accordion-down": {

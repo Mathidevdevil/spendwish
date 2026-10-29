@@ -12,7 +12,6 @@ import {
   Loader2,
   Lock,
   Mail,
-  PlusCircle,
   Sparkles,
   User,
 } from "lucide-react";
@@ -138,21 +137,23 @@ function SignUpForm() {
           return;
         }
 
-        const msg = error.message || "Failed to create account. Please try again.";
+        const msg = error.message || "Unable to register. Please verify your details.";
         setAuthError(msg);
         toast.error(msg);
         return;
       }
 
-      if (authData?.session) {
-        toast.success("Account created successfully!");
-        window.location.href = "/dashboard";
-      } else if (authData?.user) {
+      if (authData?.user && !authData.session) {
         setCheckInboxEmail(data.email);
-        toast.success("Confirmation email sent! Please check your inbox.");
+        return;
+      }
+
+      if (authData?.session) {
+        toast.success("Account created successfully! Welcome to Spendwise.");
+        window.location.href = "/dashboard";
       }
     } catch {
-      const msg = "Failed to create account. Please try again.";
+      const msg = "Registration failed. Please check network connection.";
       setAuthError(msg);
       toast.error(msg);
     } finally {
@@ -161,162 +162,114 @@ function SignUpForm() {
   };
 
   return (
-    <AuthCard
-      title={checkInboxEmail ? "Check your inbox" : "Create an account"}
-      description={
-        checkInboxEmail
-          ? `We sent a confirmation link to ${checkInboxEmail}`
-          : "Track expenses, create monthly budgets, and manage your travel"
-      }
-    >
+    <div>
       {checkInboxEmail ? (
-        <div className="space-y-5 text-center py-2 animate-in fade-in-50">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+        <div className="text-center py-6 space-y-4">
+          <div className="h-14 w-14 rounded-full bg-emerald-500/10 text-emerald-400 mx-auto flex items-center justify-center border border-emerald-500/20">
             <CheckCircle2 className="h-7 w-7" />
           </div>
-          <div className="space-y-2">
-            <h3 className="text-base font-semibold text-foreground">
-              Verify your email address
-            </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              We&apos;ve sent a verification link to{" "}
-              <strong className="text-foreground">{checkInboxEmail}</strong>.
-              Click the link in your email to confirm your account and access your
-              dashboard.
+          <div className="space-y-1">
+            <h3 className="text-xl font-bold text-foreground">Check your inbox</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              We sent a verification link to <strong className="text-foreground">{checkInboxEmail}</strong>.
             </p>
           </div>
-          <div className="pt-2 flex flex-col gap-2">
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/login">Return to sign in</Link>
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => setCheckInboxEmail(null)}
-            >
-              Sign up with a different email
+          <div className="pt-2">
+            <Button asChild variant="outline" className="rounded-xl text-xs h-10">
+              <Link href="/login">Back to Sign In</Link>
             </Button>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {/* 1-Click Access Options: Clean full-width stacked pair */}
-          <div className="flex flex-col gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleDemoLogin("demo@spendwise.app", "Aarav Sharma")}
-              disabled={demoLoading || loading}
-              className="w-full h-11 border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-medium rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm text-sm"
-            >
-              {demoLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
-                  <span>Instant Demo Access (Sample Data)</span>
-                </>
-              )}
-            </Button>
+          {/* 1. Google OAuth Button */}
+          <GoogleOAuthButton text="Continue with Google" />
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleDemoLogin("newuser@spendwise.app", "New User")}
-              disabled={demoLoading || loading}
-              className="w-full h-11 border-border bg-card hover:bg-accent text-foreground font-medium rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm text-sm"
-            >
-              {demoLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-foreground" />
-              ) : (
-                <>
-                  <PlusCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                  <span>Start Empty (Clean Workspace)</span>
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="relative">
+          {/* 2. Divider */}
+          <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+              <span className="w-full border-t border-border/80" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground font-medium">
+            <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+              <span className="bg-background px-3 text-muted-foreground font-semibold">
                 Or sign up with credentials
               </span>
             </div>
           </div>
 
-          <GoogleOAuthButton text="Continue with Google" />
-
           {authError && (
             <div
               role="alert"
-              className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center font-medium animate-in fade-in-50"
+              className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs text-center font-medium animate-in fade-in-50"
             >
               {authError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="fullName">Full Name</Label>
+          {/* 3. Credentials Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="fullName" className="text-xs font-semibold text-foreground">
+                Full Name
+              </Label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <User className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="fullName"
                   type="text"
                   placeholder="Aarav Sharma"
-                  className="pl-9"
+                  className="pl-10 h-12 text-base rounded-xl bg-surface border-border/80 focus:border-emerald-400"
                   autoComplete="name"
                   {...register("fullName")}
                 />
               </div>
               {errors.fullName && (
-                <p className="text-xs text-destructive mt-1">
+                <p className="text-xs text-rose-400 mt-1">
                   {errors.fullName.message}
                 </p>
               )}
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email address</Label>
+            <div className="space-y-1">
+              <Label htmlFor="email" className="text-xs font-semibold text-foreground">
+                Email address
+              </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@example.com"
-                  className="pl-9"
+                  placeholder="name@company.com"
+                  className="pl-10 h-12 text-base rounded-xl bg-surface border-border/80 focus:border-emerald-400"
                   autoComplete="email"
                   {...register("email")}
                 />
               </div>
               {errors.email && (
-                <p className="text-xs text-destructive mt-1">
+                <p className="text-xs text-rose-400 mt-1">
                   {errors.email.message}
                 </p>
               )}
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password (min 8 characters)</Label>
+            <div className="space-y-1">
+              <Label htmlFor="password" className="text-xs font-semibold text-foreground">
+                Password
+              </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-9 pr-9"
+                  className="pl-10 pr-10 h-12 text-base rounded-xl bg-surface border-border/80 focus:border-emerald-400"
                   autoComplete="new-password"
                   {...register("password")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -327,28 +280,30 @@ function SignUpForm() {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-xs text-destructive mt-1">
+                <p className="text-xs text-rose-400 mt-1">
                   {errors.password.message}
                 </p>
               )}
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="space-y-1">
+              <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground">
+                Confirm Password
+              </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <Input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-9 pr-9"
+                  className="pl-10 pr-10 h-12 text-base rounded-xl bg-surface border-border/80 focus:border-emerald-400"
                   autoComplete="new-password"
                   {...register("confirmPassword")}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground"
                   aria-label={
                     showConfirmPassword
                       ? "Hide confirm password"
@@ -363,15 +318,16 @@ function SignUpForm() {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-xs text-destructive mt-1">
+                <p className="text-xs text-rose-400 mt-1">
                   {errors.confirmPassword.message}
                 </p>
               )}
             </div>
 
+            {/* Primary Gradient Button */}
             <Button
               type="submit"
-              className="w-full h-11 text-sm font-semibold rounded-xl"
+              className="w-full h-12 text-sm font-semibold rounded-xl btn-gradient mt-2"
               disabled={loading || demoLoading}
             >
               {loading ? (
@@ -385,34 +341,54 @@ function SignUpForm() {
             </Button>
           </form>
 
-          <div className="text-center text-xs text-muted-foreground pt-2">
+          {/* 4. Subtle Demo Options Row */}
+          <div className="pt-2 border-t border-border/60 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
+            <span>Try the demo:</span>
+            <button
+              type="button"
+              onClick={() => handleDemoLogin("demo@spendwise.app", "Aarav Sharma")}
+              disabled={demoLoading || loading}
+              className="px-2.5 py-1 rounded-full text-xs font-medium bg-surface border border-border/80 text-foreground hover:border-emerald-400 hover:text-emerald-400 transition-colors inline-flex items-center gap-1"
+            >
+              <Sparkles className="h-3 w-3 text-amber-400" />
+              <span>Sample data</span>
+            </button>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={() => handleDemoLogin("newuser@spendwise.app", "New User")}
+              disabled={demoLoading || loading}
+              className="px-2.5 py-1 rounded-full text-xs font-medium bg-surface border border-border/80 text-foreground hover:border-cyan-400 hover:text-cyan-400 transition-colors"
+            >
+              Start empty
+            </button>
+          </div>
+
+          {/* 5. Switch to Login */}
+          <div className="text-center text-xs text-muted-foreground pt-1">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-primary font-semibold hover:underline"
+              className="text-emerald-400 font-semibold hover:underline"
             >
               Sign in
             </Link>
           </div>
         </div>
       )}
-    </AuthCard>
+    </div>
   );
 }
 
 export default function SignUpPage() {
   return (
-    <Suspense
-      fallback={
-        <AuthCard
-          title="Create an account"
-          description="Track expenses, create monthly budgets, and manage your travel"
-        >
-          <div className="h-48 animate-pulse bg-muted rounded-xl" />
-        </AuthCard>
-      }
+    <AuthCard
+      title="Create your account"
+      description="Start tracking your cash flow and travel budgets today"
     >
-      <SignUpForm />
-    </Suspense>
+      <Suspense fallback={<div className="h-48 animate-pulse bg-muted rounded-xl" />}>
+        <SignUpForm />
+      </Suspense>
+    </AuthCard>
   );
 }

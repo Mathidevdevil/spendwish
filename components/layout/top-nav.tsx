@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Sparkles, Wallet } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Plus, Search, Sparkles, Wallet } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
+import { CommandPalette } from "./command-palette";
+import { Button } from "@/components/ui/button";
+import { transactionModal } from "@/hooks/use-transaction-modal";
 
 interface TopNavProps {
   userEmail?: string | null;
@@ -14,10 +18,19 @@ interface TopNavProps {
 }
 
 export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
+  const pathname = usePathname();
   const [resolvedEmail, setResolvedEmail] = useState<string | null>(userEmail || null);
   const [resolvedName, setResolvedName] = useState<string | null>(userName || null);
   const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(avatarUrl || null);
   const [isDemo, setIsDemo] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  // Compute active page title
+  let pageTitle = "Dashboard";
+  if (pathname.startsWith("/transactions")) pageTitle = "Transactions";
+  else if (pathname.startsWith("/budgets")) pageTitle = "Budgets";
+  else if (pathname.startsWith("/trips")) pageTitle = "Travel Plans";
+  else if (pathname.startsWith("/settings")) pageTitle = "Settings";
 
   useEffect(() => {
     if (userEmail) setResolvedEmail(userEmail);
@@ -48,7 +61,6 @@ export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
       setResolvedName(decodeURIComponent(nameCookie));
     }
 
-    // Also fetch from supabase auth client
     try {
       const supabase = createClient();
       supabase.auth
@@ -75,46 +87,67 @@ export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
   }, [userEmail, userName, avatarUrl]);
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 w-full items-center border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Mobile & Tablet brand header */}
-        <div className="flex lg:hidden items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center text-white shadow-sm">
-            <Wallet className="h-4 w-4" />
+    <>
+      <header className="sticky top-0 z-20 flex h-16 w-full items-center border-b border-border/70 bg-background/80 backdrop-blur-xl">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+          {/* Mobile brand header (<1024px) */}
+          <div className="flex lg:hidden items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-emerald-400 to-cyan-400 flex items-center justify-center text-slate-950 font-bold shadow-sm shadow-emerald-500/20 shrink-0">
+              <Wallet className="h-4 w-4" />
+            </div>
+            <Link href="/" className="font-bold text-base tracking-tight text-foreground truncate">
+              Spendwise
+            </Link>
           </div>
-          <Link href="/" className="font-bold text-base tracking-tight">
-            Spendwise
-          </Link>
-        </div>
 
-        <div className="hidden lg:flex items-center gap-3">
-          <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground/80">
-            Personal Wealth & Budgeting
-          </span>
+          {/* Desktop Left: Current Page Title (Short, confident, no filler) */}
+          <div className="hidden lg:flex items-center gap-3">
+            <h1 className="text-lg font-bold tracking-tight text-foreground">
+              {pageTitle}
+            </h1>
+          </div>
 
-          {isDemo && (
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-semibold">
-              <Sparkles className="h-3 w-3 text-amber-500" />
-              <span>Demo Mode</span>
-            </div>
-          )}
-        </div>
+          {/* Center/Right Actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Command Palette Trigger */}
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/80 bg-surface hover:bg-surface-elevated text-xs text-muted-foreground hover:text-foreground transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-ring"
+              title="Search or commands (Ctrl+K / Cmd+K)"
+            >
+              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="hidden md:inline">Search...</span>
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground bg-surface-elevated border border-border/60 rounded">
+                ⌘K
+              </kbd>
+            </button>
 
-        <div className="flex items-center gap-2 sm:gap-3">
-          {isDemo && (
-            <div className="lg:hidden flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-[11px] font-semibold">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-              <span>Demo</span>
-            </div>
-          )}
-          <ThemeToggle />
-          <UserMenu
-            email={resolvedEmail}
-            name={resolvedName}
-            avatarUrl={resolvedAvatar}
-          />
+            {/* Desktop Quick-Add Button (Gradient Accent) */}
+            <Button
+              onClick={() => transactionModal.open()}
+              className="hidden lg:inline-flex btn-gradient h-9 px-3.5 rounded-xl text-xs font-semibold gap-1.5 shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>New Entry</span>
+            </Button>
+
+            <ThemeToggle />
+
+            <UserMenu
+              email={resolvedEmail}
+              name={resolvedName}
+              avatarUrl={resolvedAvatar}
+            />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+      />
+    </>
   );
 }

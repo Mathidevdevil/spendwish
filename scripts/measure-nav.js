@@ -66,3 +66,4 @@ async function measureNavigation() {
 }
 
 measureNavigation().catch(console.error);
+

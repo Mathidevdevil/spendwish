@@ -4,8 +4,14 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 220 14% 97%; /* #F5F6F8 */
+    --foreground: 222 47% 11%; /* #0F172A */
+
+    --surface: 0 0% 100%; /* #FFFFFF */
+    --surface-foreground: 222 47% 11%;
+
+    --surface-elevated: 0 0% 100%;
+    --surface-elevated-foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -13,56 +19,75 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 158 64% 42%; /* #10B981 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11.2%;
+    --secondary: 215 16% 93%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 215 16% 93%;
+    --muted-foreground: 215 16% 47%; /* #64748B */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222 47% 11.2%;
+    --accent: 158 64% 42%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 350 89% 60%; /* Rose #FB7185 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --income: 158 64% 42%; /* #10B981 */
+    --expense: 350 89% 60%; /* #FB7185 */
+    --warning: 38 92% 50%; /* #FBBF24 */
+    --info: 199 89% 48%; /* #38BDF8 */
+
+    --border: 215 25% 91%; /* rgba(15,23,42,0.08) */
+    --input: 215 25% 91%;
+    --ring: 158 64% 42%;
 
     --radius: 0.75rem;
+    --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    --background: 218 29% 5.5%; /* #0A0D12 */
+    --foreground: 216 28% 93%; /* #E8ECF2 */
 
-    --card: 224 71% 7%;
-    --card-foreground: 213 31% 91%;
+    --surface: 218 24% 9%; /* #11151C */
+    --surface-foreground: 216 28% 93%;
 
-    --popover: 224 71% 7%;
-    --popover-foreground: 213 31% 91%;
+    --surface-elevated: 219 23% 12%; /* #171C25 */
+    --surface-elevated-foreground: 216 28% 93%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222 47% 11.2%;
+    --card: 218 24% 9%; /* #11151C */
+    --card-foreground: 216 28% 93%;
 
-    --secondary: 222.2 47.4% 11.2%;
-    --secondary-foreground: 210 40% 98%;
+    --popover: 219 23% 12%; /* #171C25 */
+    --popover-foreground: 216 28% 93%;
 
-    --muted: 223 47% 11%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --primary: 158 64% 52%; /* Emerald #34D399 */
+    --primary-foreground: 220 29% 5.5%;
 
-    --accent: 216 34% 17%;
-    --accent-foreground: 210 40% 98%;
+    --secondary: 219 23% 12%;
+    --secondary-foreground: 216 28% 93%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --muted: 219 23% 12%;
+    --muted-foreground: 219 14% 60%; /* #8B95A7 */
 
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
-    --ring: 224.3 76.3% 48%;
+    --accent: 158 64% 52%;
+    --accent-foreground: 220 29% 5.5%;
+
+    --destructive: 350 89% 60%; /* #FB7185 */
+    --destructive-foreground: 220 29% 5.5%;
+
+    --income: 158 64% 52%; /* #34D399 */
+    --expense: 350 89% 60%; /* #FB7185 */
+    --warning: 38 92% 50%; /* #FBBF24 */
+    --info: 199 89% 48%; /* #38BDF8 */
+
+    --border: 218 20% 16%; /* rgba(255,255,255,0.08) */
+    --input: 218 20% 16%;
+    --ring: 158 64% 52%;
+
+    --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 }
 
@@ -74,24 +99,46 @@
     scrollbar-gutter: stable;
   }
   body {
-    @apply bg-background text-foreground antialiased min-h-screen selection:bg-primary/20 selection:text-primary;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground antialiased min-h-[100dvh] selection:bg-emerald-500/20 selection:text-emerald-400 font-sans;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Consistent shared page container across all views */
+/* Shared page container across all views */
 .page-container {
   @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6;
 }
 
-/* Touch targets and safe area for mobile devices */
+/* Safe area for mobile navigation */
 .safe-pb {
-  padding-bottom: env(safe-area-inset-bottom, 1rem);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
 }
 
 @layer utilities {
   .tabular-nums {
     font-variant-numeric: tabular-nums;
+  }
+  
+  /* Brand primary gradient button */
+  .btn-gradient {
+    @apply relative overflow-hidden bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-950 font-semibold shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:brightness-105 active:scale-[0.98] transition-all;
+  }
+
+  /* Deep surface with hairline border & subtle inner top highlight */
+  .card-fintech {
+    @apply rounded-[20px] border border-border/80 bg-card text-card-foreground shadow-xs transition-all duration-200;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), var(--inner-highlight);
+  }
+
+  /* Hero card with subtle colored glow */
+  .card-hero {
+    @apply rounded-[28px] border border-border/80 bg-card text-card-foreground relative overflow-hidden;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.15), var(--inner-highlight);
+  }
+
+  /* Glass backdrop ONLY for floating elements */
+  .floating-glass {
+    @apply bg-background/80 backdrop-blur-xl border border-border/80 shadow-lg;
   }
 }
 
