@@ -1,14 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { enableDemoMode } from "@/lib/demo-data";
+import { sanitizeRedirectPath } from "@/lib/utils";
 
-export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: string }) {
+export function GoogleOAuthButton({
+  text = "Continue with Google",
+}: {
+  text?: string;
+}) {
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const rawNext = searchParams.get("next") || searchParams.get("redirect");
+  const targetRedirect = sanitizeRedirectPath(rawNext, "/dashboard");
   const supabase = createClient();
 
   const handleGoogleLogin = async () => {
@@ -21,6 +30,7 @@ export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: st
         process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
 
       if (isPlaceholderUrl) {
+        // Fallback for demo/offline environment without active OAuth provider
         enableDemoMode("google.user@spendwise.app", "Google User");
         await fetch("/api/auth/demo-session", {
           method: "POST",
@@ -31,44 +41,31 @@ export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: st
           }),
         });
         toast.success("Signed in with Google (Demo Mode)");
-        window.location.href = "/";
+        window.location.href = targetRedirect;
         return;
       }
 
-      const redirectTo = `${window.location.origin}/auth/callback`;
+      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+        targetRedirect
+      )}`;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
       });
 
       if (error) {
-        enableDemoMode("google.user@spendwise.app", "Google User");
-        await fetch("/api/auth/demo-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: "google.user@spendwise.app",
-            name: "Google User",
-          }),
-        });
-        toast.success("Signed in with Google (Demo Mode)");
-        window.location.href = "/";
+        toast.error(error.message || "Failed to sign in with Google");
+        setLoading(false);
       }
     } catch {
-      enableDemoMode("google.user@spendwise.app", "Google User");
-      await fetch("/api/auth/demo-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "google.user@spendwise.app",
-          name: "Google User",
-        }),
-      });
-      toast.success("Signed in with Google (Demo Mode)");
-      window.location.href = "/";
-    } finally {
+      toast.error("Could not initiate Google sign in. Please try again.");
       setLoading(false);
     }
   };
@@ -77,6 +74,7 @@ export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: st
     <Button
       type="button"
       variant="outline"
+      aria-label={text}
       className="w-full flex items-center justify-center gap-3 h-11 text-sm font-medium border-border hover:bg-accent/80 transition-all rounded-xl"
       onClick={handleGoogleLogin}
       disabled={loading}
@@ -84,7 +82,12 @@ export function GoogleOAuthButton({ text = "Continue with Google" }: { text?: st
       {loading ? (
         <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
       ) : (
-        <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+          className="h-4 w-4 shrink-0"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#4285F4"

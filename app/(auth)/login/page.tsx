@@ -22,11 +22,16 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const rawNext = searchParams.get("next") || searchParams.get("redirect");
   const targetRedirect = sanitizeRedirectPath(rawNext, "/dashboard");
+  const urlError = searchParams.get("error");
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(
+    urlError === "auth"
+      ? "Authentication failed. Please try signing in again."
+      : null
+  );
   const supabase = createClient();
 
   const handleDemoLogin = async (customEmail?: string, customName?: string) => {
