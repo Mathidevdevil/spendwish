@@ -269,7 +269,7 @@ function SignUpForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2 top-2 h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -303,7 +303,7 @@ function SignUpForm() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-foreground"
+                  className="absolute right-2 top-2 h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg transition-colors"
                   aria-label={
                     showConfirmPassword
                       ? "Hide confirm password"
