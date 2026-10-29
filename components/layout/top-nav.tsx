@@ -77,8 +77,8 @@ export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
   return (
     <header className="sticky top-0 z-20 flex h-16 w-full items-center border-b border-border bg-background/80 backdrop-blur-md">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Mobile brand header */}
-        <div className="flex md:hidden items-center gap-2">
+        {/* Mobile & Tablet brand header */}
+        <div className="flex lg:hidden items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-primary to-emerald-500 flex items-center justify-center text-white shadow-sm">
             <Wallet className="h-4 w-4" />
           </div>
@@ -87,7 +87,7 @@ export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
           </Link>
         </div>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <span className="text-xs uppercase font-bold tracking-wider text-muted-foreground/80">
             Personal Wealth & Budgeting
           </span>
@@ -102,7 +102,7 @@ export function TopNav({ userEmail, userName, avatarUrl }: TopNavProps) {
 
         <div className="flex items-center gap-2 sm:gap-3">
           {isDemo && (
-            <div className="md:hidden flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-[11px] font-semibold">
+            <div className="lg:hidden flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-[11px] font-semibold">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
               <span>Demo</span>
             </div>

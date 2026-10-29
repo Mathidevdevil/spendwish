@@ -19,17 +19,17 @@ export function AppShell({
   avatarUrl,
 }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background">
       <DesktopSidebar />
 
-      <div className="md:pl-64 flex flex-col min-h-screen">
+      <div className="lg:pl-64 flex flex-col min-h-[100dvh]">
         <TopNav
           userEmail={userEmail}
           userName={userName}
           avatarUrl={avatarUrl}
         />
 
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-12 animate-in fade-in-50 duration-200">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-12 animate-in fade-in-50 duration-200">
           {children}
         </main>
 
