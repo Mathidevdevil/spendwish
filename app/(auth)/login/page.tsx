@@ -15,25 +15,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { enableDemoMode } from "@/lib/demo-data";
+import { sanitizeRedirectPath } from "@/lib/utils";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const rawNext = searchParams.get("next") || searchParams.get("redirect");
+  const targetRedirect = sanitizeRedirectPath(rawNext, "/dashboard");
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const supabase = createClient();
 
   const handleDemoLogin = async (customEmail?: string, customName?: string) => {
     try {
       setDemoLoading(true);
-      const email = typeof customEmail === "string" && customEmail.includes("@")
-        ? customEmail
-        : "demo@spendwise.app";
-      const name = typeof customName === "string" && customName.length > 0
-        ? customName
-        : "Aarav Sharma";
+      const email =
+        typeof customEmail === "string" && customEmail.includes("@")
+          ? customEmail
+          : "demo@spendwise.app";
+      const name =
+        typeof customName === "string" && customName.length > 0
+          ? customName
+          : "Aarav Sharma";
 
       enableDemoMode(email, name);
       await fetch("/api/auth/demo-session", {
@@ -42,7 +48,7 @@ function LoginForm() {
         body: JSON.stringify({ email, name }),
       });
       toast.success("Welcome to Spendwise! Logged in successfully.");
-      window.location.href = redirect;
+      window.location.href = targetRedirect;
     } catch {
       toast.error("Failed to start session");
       setDemoLoading(false);
@@ -64,55 +70,89 @@ function LoginForm() {
   const onSubmit = async (data: LoginInput) => {
     try {
       setLoading(true);
+      setAuthError(null);
 
       const isPlaceholderUrl =
         !process.env.NEXT_PUBLIC_SUPABASE_URL ||
         process.env.NEXT_PUBLIC_SUPABASE_URL.includes("spendwise-demo.supabase.co") ||
         process.env.NEXT_PUBLIC_SUPABASE_URL.includes("placeholder");
-      const isDemoAccount = data.email.toLowerCase() === "demo@spendwise.app";
 
-      // If Supabase credentials are placeholder or demo email is used, enter demo mode
-      if (isPlaceholderUrl || isDemoAccount) {
-        await handleDemoLogin(data.email, data.email.split("@")[0]);
+      // Known demo shortcuts
+      if (
+        data.email.toLowerCase() === "demo@spendwise.app" &&
+        data.password === "demo1234"
+      ) {
+        await handleDemoLogin("demo@spendwise.app", "Aarav Sharma");
         return;
       }
 
-      // Safe sign-in with 3.5s timeout to prevent UI freeze
+      if (
+        data.email.toLowerCase() === "newuser@spendwise.app" &&
+        data.password === "demo1234"
+      ) {
+        await handleDemoLogin("newuser@spendwise.app", "New User");
+        return;
+      }
+
+      // If backend is placeholder or demo without real Supabase connection,
+      // fail with invalid credentials unless using the instant demo access buttons
+      if (isPlaceholderUrl) {
+        // Allow instant demo logins through dedicated buttons, but validate credentials
+        const friendlyMsg = "Invalid email or password";
+        setAuthError(friendlyMsg);
+        toast.error(friendlyMsg);
+        return;
+      }
+
+      // Call Supabase auth with 6s timeout
       const signInPromise = supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      const timeoutPromise = new Promise<{ error: any }>((resolve) =>
+      const timeoutPromise = new Promise<{ data: any; error: any }>((resolve) =>
         setTimeout(
-          () => resolve({ error: { message: "Network timeout connecting to backend", status: 0 } }),
-          3500
+          () =>
+            resolve({
+              data: null,
+              error: { message: "timeout", status: 408 },
+            }),
+          6000
         )
       );
 
-      const { error } = await Promise.race([signInPromise, timeoutPromise]);
+      const { data: authData, error } = (await Promise.race([
+        signInPromise,
+        timeoutPromise,
+      ])) as any;
 
       if (error) {
-        // Fallback to demo session if network error or unconfigured backend
         if (
-          error.message?.includes("fetch") ||
-          error.message?.includes("network") ||
-          error.message?.includes("timeout") ||
-          error.status === 0
+          error.status === 429 ||
+          error.message?.toLowerCase().includes("rate limit") ||
+          error.message?.toLowerCase().includes("too many requests")
         ) {
-          toast.info("Entering Demo Mode session for " + data.email);
-          await handleDemoLogin(data.email, data.email.split("@")[0]);
+          const msg = "Too many login attempts. Please try again later.";
+          setAuthError(msg);
+          toast.error(msg);
           return;
         }
-        toast.error(error.message);
+
+        // Generic error mapping without leaking whether user exists
+        const msg = "Invalid email or password";
+        setAuthError(msg);
+        toast.error(msg);
         return;
       }
 
-      toast.success("Welcome back!");
-      window.location.href = redirect;
+      if (authData?.user) {
+        toast.success("Welcome back!");
+        window.location.href = targetRedirect;
+      }
     } catch {
-      toast.info("Entering Demo Mode session...");
-      await handleDemoLogin(data.email, data.email.split("@")[0]);
+      const msg = "Invalid email or password";
+      setAuthError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -168,7 +208,16 @@ function LoginForm() {
         </div>
       </div>
 
-      <GoogleOAuthButton text="Sign in with Google" />
+      <GoogleOAuthButton text="Continue with Google" />
+
+      {authError && (
+        <div
+          role="alert"
+          className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center font-medium animate-in fade-in-50"
+        >
+          {authError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-1.5">
@@ -234,7 +283,7 @@ function LoginForm() {
         <Button
           type="submit"
           className="w-full h-11 text-sm font-semibold rounded-xl"
-          disabled={loading}
+          disabled={loading || demoLoading}
         >
           {loading ? (
             <>
