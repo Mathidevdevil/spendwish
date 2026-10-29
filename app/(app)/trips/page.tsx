@@ -17,9 +17,8 @@ export default function TripsPage() {
   const { data: trips = [], isLoading } = useTrips(statusFilter);
 
   return (
-    <AppShell>
-      <div className="space-y-6">
-        {/* Header */}
+    <div className="space-y-6">
+      {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
@@ -134,6 +133,5 @@ export default function TripsPage() {
           initialData={editingTrip}
         />
       </div>
-    </AppShell>
   );
 }

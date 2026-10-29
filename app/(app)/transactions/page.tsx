@@ -41,48 +41,46 @@ export default function TransactionsPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              Transactions
-            </h1>
-            <p className="text-muted-foreground text-sm mt-0.5">
-              Manage your daily expenses, incomes, and travel spending
-            </p>
-          </div>
-
-          <Button
-            onClick={() => transactionModal.open()}
-            className="rounded-xl gap-2 font-semibold shadow-sm shadow-primary/20"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Transaction</span>
-          </Button>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            Transactions
+          </h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            Manage your daily expenses, incomes, and travel spending
+          </p>
         </div>
 
-        {/* Filters */}
-        <TransactionFilters
-          filters={filters}
-          onChange={setFilters}
-          categories={categories}
-          trips={trips}
-          onExport={handleExportCSV}
-          isExportDisabled={transactions.length === 0}
-        />
-
-        {/* Transactions List */}
-        <TransactionList
-          transactions={transactions}
-          totalCount={totalCount}
-          currentPage={filters.page || 1}
-          pageSize={filters.pageSize || 15}
-          onPageChange={(newPage) => setFilters({ ...filters, page: newPage })}
-          isLoading={isLoading}
-        />
+        <Button
+          onClick={() => transactionModal.open()}
+          className="rounded-xl gap-2 font-semibold shadow-sm shadow-primary/20"
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add Transaction</span>
+        </Button>
       </div>
-    </AppShell>
+
+      {/* Filters */}
+      <TransactionFilters
+        filters={filters}
+        onChange={setFilters}
+        categories={categories}
+        trips={trips}
+        onExport={handleExportCSV}
+        isExportDisabled={transactions.length === 0}
+      />
+
+      {/* Transactions List */}
+      <TransactionList
+        transactions={transactions}
+        totalCount={totalCount}
+        currentPage={filters.page || 1}
+        pageSize={filters.pageSize || 15}
+        onPageChange={(newPage) => setFilters({ ...filters, page: newPage })}
+        isLoading={isLoading}
+      />
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Calendar,
   Download,
@@ -42,6 +42,22 @@ export function TransactionFilters({
   isExportDisabled = false,
 }: TransactionFiltersProps) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [localSearch, setLocalSearch] = useState(filters.search || "");
+
+  // Sync external filter changes to local state
+  useEffect(() => {
+    setLocalSearch(filters.search || "");
+  }, [filters.search]);
+
+  // Debounce search input by 300ms to eliminate excessive refetches
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== (filters.search || "")) {
+        onChange({ ...filters, search: localSearch, page: 1 });
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   const activeFilterCount = [
     filters.type && filters.type !== "all",
@@ -74,16 +90,17 @@ export function TransactionFilters({
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search notes or merchants..."
-            value={filters.search || ""}
-            onChange={(e) =>
-              onChange({ ...filters, search: e.target.value, page: 1 })
-            }
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-9 h-10 w-full"
           />
-          {filters.search && (
+          {localSearch && (
             <button
               type="button"
-              onClick={() => onChange({ ...filters, search: "", page: 1 })}
+              onClick={() => {
+                setLocalSearch("");
+                onChange({ ...filters, search: "", page: 1 });
+              }}
               className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
               aria-label="Clear search"
             >

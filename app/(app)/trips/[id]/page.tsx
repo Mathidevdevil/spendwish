@@ -137,9 +137,8 @@ export default function TripDetailPage({
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
-        {/* Navigation & Header */}
+    <div className="space-y-6">
+      {/* Navigation & Header */}
         <div>
           <Link
             href="/trips"
@@ -566,6 +565,5 @@ export default function TripDetailPage({
           isLoading={deleteItemMutation.isPending}
         />
       </div>
-    </AppShell>
   );
 }

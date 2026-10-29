@@ -1,8 +1,12 @@
-import { getCurrentUser } from "@/lib/auth";
+import React from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { getCurrentUser } from "@/lib/auth";
 
-export default async function DashboardPage() {
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const authData = await getCurrentUser();
 
   return (
@@ -11,7 +15,8 @@ export default async function DashboardPage() {
       userName={authData?.profile?.full_name}
       avatarUrl={authData?.profile?.avatar_url}
     >
-      <DashboardView />
+      {children}
     </AppShell>
   );
 }
+
