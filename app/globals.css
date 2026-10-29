@@ -70,10 +70,18 @@
   * {
     @apply border-border;
   }
+  html {
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-background text-foreground antialiased min-h-screen selection:bg-primary/20 selection:text-primary;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* Consistent shared page container across all views */
+.page-container {
+  @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6;
 }
 
 /* Touch targets and safe area for mobile devices */

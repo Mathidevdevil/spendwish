@@ -16,6 +16,7 @@ import {
   Moon,
   Palette,
   ShieldAlert,
+  Sparkles,
   Sun,
   Trash2,
   User,
@@ -27,6 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -51,13 +53,50 @@ export default function SettingsPage() {
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Load current user profile
+  // Load current user profile prioritizing real Supabase session
   useEffect(() => {
     async function loadUser() {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user && !user.email?.includes("@spendwise.app")) {
+          setEmail(user.email || "");
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
+
+          const profileRow = profile as Profile | null;
+          setFullName(
+            profileRow?.full_name ||
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            ""
+          );
+          setAvatarUrl(
+            profileRow?.avatar_url ||
+            user.user_metadata?.avatar_url ||
+            user.user_metadata?.picture ||
+            null
+          );
+          if (profileRow?.currency) {
+            setCurrency(profileRow.currency as CurrencyCode);
+          }
+          setIsDemo(false);
+          return;
+        }
+      } catch {}
+
       if (isDemoMode()) {
+        setIsDemo(true);
         const emailCookie = document.cookie
           .split("; ")
           .find((r) => r.startsWith("spendwise_user_email="))
@@ -69,29 +108,7 @@ export default function SettingsPage() {
 
         setEmail(emailCookie ? decodeURIComponent(emailCookie) : "demo@spendwise.app");
         setFullName(nameCookie ? decodeURIComponent(nameCookie) : "Aarav Sharma");
-        return;
       }
-
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) {
-          setEmail(user.email || "");
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
-          const profileRow = profile as Profile | null;
-          if (profileRow) {
-            setFullName(profileRow.full_name || "");
-            if (profileRow.currency) {
-              setCurrency(profileRow.currency as CurrencyCode);
-            }
-          }
-        }
-      } catch {}
     }
     loadUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,7 +119,7 @@ export default function SettingsPage() {
     try {
       setLoadingProfile(true);
 
-      if (isDemoMode()) {
+      if (isDemo) {
         document.cookie = `spendwise_user_name=${fullName}; path=/; max-age=2592000; SameSite=Lax`;
         toast.success("Profile updated successfully (Demo Mode)");
         return;
@@ -133,10 +150,10 @@ export default function SettingsPage() {
 
   const handleExportJSON = async () => {
     try {
-      if (isDemoMode()) {
+      if (isDemo) {
         const exportPayload = {
           exportedAt: new Date().toISOString(),
-          user: { email: "demo@spendwise.app", fullName: fullName || "Aarav Sharma" },
+          user: { email, fullName },
           currency,
           transactions: demoStore.getTransactions({ page: 1, pageSize: 1000 }).items,
           categories: demoStore.getCategories(),
@@ -204,7 +221,7 @@ export default function SettingsPage() {
 
   const handleExportCSV = async () => {
     try {
-      if (isDemoMode()) {
+      if (isDemo) {
         const txs = demoStore.getTransactions({ page: 1, pageSize: 1000 }).items;
         exportTransactionsToCSV(
           txs,
@@ -249,7 +266,7 @@ export default function SettingsPage() {
     try {
       setIsDeleting(true);
 
-      if (isDemoMode()) {
+      if (isDemo) {
         disableDemoMode();
         await fetch("/api/auth/demo-session", { method: "DELETE" }).catch(() => {});
         toast.success("Demo session cleared");
@@ -285,7 +302,7 @@ export default function SettingsPage() {
 
   const handleResetToEmpty = async () => {
     try {
-      if (isDemoMode()) {
+      if (isDemo) {
         demoStore.clearUserData(email);
         toast.success("Workspace cleared! All transactions, budgets, and trips are now empty.");
         router.refresh();
@@ -307,8 +324,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <AppShell userEmail={email} userName={fullName}>
-      <div className="max-w-4xl mx-auto space-y-6">
+    <AppShell userEmail={email} userName={fullName} avatarUrl={avatarUrl}>
+      <div className="space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
             Account & Settings
@@ -318,6 +335,29 @@ export default function SettingsPage() {
           </p>
         </div>
 
+        {/* Demo Mode Notice Banner */}
+        {isDemo && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-200">
+              <Sparkles className="h-5 w-5 text-amber-500 shrink-0" />
+              <div>
+                <strong className="font-semibold">Demo Sandbox Active</strong>
+                <p className="text-xs text-amber-800/80 dark:text-amber-300/80 mt-0.5">
+                  You are currently exploring Spendwise in Demo Mode. Changes made here are saved locally to your browser and isolated from production accounts.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDeleteAccount}
+              className="border-amber-500/30 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20 text-xs shrink-0 rounded-xl font-medium"
+            >
+              Exit Demo Sandbox
+            </Button>
+          </div>
+        )}
+
         {/* 1. Profile Information */}
         <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
@@ -326,10 +366,35 @@ export default function SettingsPage() {
               <span>Personal Profile</span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Your name and account email for notifications
+              Your identity and account credentials
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            {/* User Avatar Card Header */}
+            <div className="flex items-center gap-4 p-3.5 rounded-xl bg-muted/40 border border-border/50">
+              <Avatar className="h-14 w-14 border-2 border-border shadow-xs">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName || "User"} />}
+                <AvatarFallback className="bg-primary/10 text-primary font-bold text-base">
+                  {(fullName || email || "U").slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="space-y-0.5 overflow-hidden">
+                <h3 className="font-bold text-base text-foreground truncate">
+                  {fullName || "User"}
+                </h3>
+                <p className="text-xs text-muted-foreground truncate">{email}</p>
+                {isDemo ? (
+                  <span className="inline-block px-2 py-0.2 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[10px] font-semibold">
+                    Demo Mode
+                  </span>
+                ) : (
+                  <span className="inline-block px-2 py-0.2 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-semibold">
+                    Verified Account
+                  </span>
+                )}
+              </div>
+            </div>
+
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -339,6 +404,7 @@ export default function SettingsPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Your Name"
+                    className="h-10"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -347,7 +413,7 @@ export default function SettingsPage() {
                     id="email-disabled"
                     value={email}
                     disabled
-                    className="bg-muted text-muted-foreground"
+                    className="h-10 bg-muted/60 text-muted-foreground"
                   />
                 </div>
               </div>
@@ -356,7 +422,7 @@ export default function SettingsPage() {
                 <Button
                   type="submit"
                   disabled={loadingProfile}
-                  className="rounded-xl text-xs font-semibold"
+                  className="rounded-xl text-xs font-semibold h-10 px-4"
                 >
                   {loadingProfile ? (
                     <>
@@ -380,153 +446,194 @@ export default function SettingsPage() {
               <span>Preferences</span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Customize currency display and visual appearance
+              Configure currency notation and display mode
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Currency */}
+              {/* Currency Selector */}
               <div className="space-y-1.5">
                 <Label htmlFor="currency-select">Default Currency</Label>
                 <Select
                   value={currency}
                   onValueChange={(val: CurrencyCode) => {
                     setCurrency(val);
-                    toast.success(`Currency switched to ${val}`);
+                    toast.success(`Currency updated to ${val}`);
                   }}
                 >
-                  <SelectTrigger id="currency-select">
+                  <SelectTrigger id="currency-select" className="h-10">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="INR">
-                      🇮🇳 INR - Indian Rupee (₹, Lakh/Crore)
+                      🇮🇳 INR (₹) — Indian Rupee (Lakh / Crore)
                     </SelectItem>
-                    <SelectItem value="USD">🇺🇸 USD - US Dollar ($)</SelectItem>
-                    <SelectItem value="EUR">🇪🇺 EUR - Euro (€)</SelectItem>
-                    <SelectItem value="GBP">
-                      🇬🇧 GBP - British Pound (£)
-                    </SelectItem>
+                    <SelectItem value="USD">🇺🇸 USD ($) — US Dollar</SelectItem>
+                    <SelectItem value="EUR">🇪🇺 EUR (€) — Euro</SelectItem>
+                    <SelectItem value="GBP">🇬🇧 GBP (£) — British Pound</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-[11px] text-muted-foreground">
-                  Indian number formatting (1,00,000 lakh / crore) active for INR.
+                  Indian Lakh/Crore grouping (e.g. ₹1,50,000) applied on INR.
                 </p>
               </div>
 
-              {/* Theme */}
+              {/* Theme Selector */}
               <div className="space-y-1.5">
-                <Label htmlFor="theme-select">Appearance Theme</Label>
-                <Select
-                  value={theme || "system"}
-                  onValueChange={(val) => setTheme(val)}
-                >
-                  <SelectTrigger id="theme-select">
-                    <SelectValue placeholder="Theme" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="light">☀️ Light Theme</SelectItem>
-                    <SelectItem value="dark">🌙 Dark Theme</SelectItem>
-                    <SelectItem value="system">💻 System Default</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Color Theme</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    type="button"
+                    variant={theme === "light" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTheme("light")}
+                    className="h-10 text-xs gap-1.5 font-medium rounded-xl"
+                  >
+                    <Sun className="h-3.5 w-3.5" />
+                    <span>Light</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={theme === "dark" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTheme("dark")}
+                    className="h-10 text-xs gap-1.5 font-medium rounded-xl"
+                  >
+                    <Moon className="h-3.5 w-3.5" />
+                    <span>Dark</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={theme === "system" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setTheme("system")}
+                    className="h-10 text-xs gap-1.5 font-medium rounded-xl"
+                  >
+                    <Palette className="h-3.5 w-3.5" />
+                    <span>System</span>
+                  </Button>
+                </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Smooth transitions with high contrast mode support.
+                  Adaptive dark and light mode palette.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 3. Data Export */}
+        {/* 3. Data Export & Backup */}
         <Card className="rounded-2xl border-border shadow-sm">
           <CardHeader>
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Download className="h-4 w-4 text-primary" />
-              <span>Data Export</span>
+              <span>Data Export & Backup</span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Download your transactions, categories, budgets, and travel plans
+              Download your full data package or CSV transaction ledger
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-3">
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
+                type="button"
                 variant="outline"
                 onClick={handleExportCSV}
-                className="flex-1 rounded-xl text-xs font-semibold gap-2 h-11"
+                className="h-12 justify-start gap-3 rounded-xl border-border hover:bg-accent font-medium text-xs"
               >
-                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                <span>Export Ledger (CSV)</span>
+                <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="h-4 w-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-foreground">Export CSV Ledger</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Spreadsheet-ready list of all transactions
+                  </p>
+                </div>
               </Button>
 
               <Button
+                type="button"
                 variant="outline"
                 onClick={handleExportJSON}
-                className="flex-1 rounded-xl text-xs font-semibold gap-2 h-11"
+                className="h-12 justify-start gap-3 rounded-xl border-border hover:bg-accent font-medium text-xs"
               >
-                <FileText className="h-4 w-4 text-blue-600" />
-                <span>Full Backup (JSON)</span>
+                <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <FileText className="h-4 w-4" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-foreground">Complete Backup (JSON)</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Full dump of budgets, categories, and trips
+                  </p>
+                </div>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* 4. Danger Zone */}
-        <Card className="rounded-2xl border-destructive/20 bg-destructive/5 shadow-sm">
+        {/* 4. Reset & Danger Zone */}
+        <Card className="rounded-2xl border-destructive/30 bg-destructive/5 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-destructive flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4" />
+            <CardTitle className="text-base font-semibold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
               <span>Danger Zone</span>
             </CardTitle>
             <CardDescription className="text-xs">
-              Permanently wipe your financial transactions, budgets, trips, and
-              account data
+              Irreversible account and workspace data actions
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 pt-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-destructive/20 bg-background/50">
-              <div>
-                <p className="text-xs font-semibold text-foreground">Reset Workspace to Empty</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Wipes all transactions, budgets, and trips back to 0 while keeping your account active.
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-border/80 bg-background/60">
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-foreground">
+                  Reset Workspace to Clean State
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Delete all transactions, budgets, and trips while keeping categories and profile intact.
                 </p>
               </div>
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleResetToEmpty}
-                className="shrink-0 text-xs font-semibold rounded-xl text-destructive hover:bg-destructive/10 border-destructive/30"
+                className="h-9 text-xs font-semibold rounded-xl shrink-0"
               >
                 Reset to Empty
               </Button>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-              <p className="text-xs text-muted-foreground max-w-sm">
-                Permanently delete your profile and log out completely.
-              </p>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-destructive/20 bg-destructive/10">
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-destructive">
+                  Delete Account & Wipe Everything
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Permanently erase your user profile and all financial logs.
+                </p>
+              </div>
               <Button
+                type="button"
                 variant="destructive"
+                size="sm"
                 onClick={() => setDeleteAccountOpen(true)}
-                className="rounded-xl text-xs font-semibold gap-1.5 shrink-0"
+                className="h-9 text-xs font-semibold rounded-xl shrink-0"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span>Wipe Data & Logout</span>
+                Delete Account
               </Button>
             </div>
           </CardContent>
         </Card>
-
-        <DeleteDialog
-          open={deleteAccountOpen}
-          onOpenChange={setDeleteAccountOpen}
-          onConfirm={handleDeleteAccount}
-          title="Permanently wipe all data?"
-          description="This will irreversibly delete all transactions, budgets, travel plans, and account records. This action cannot be undone."
-          isLoading={isDeleting}
-        />
       </div>
+
+      <DeleteDialog
+        open={deleteAccountOpen}
+        onOpenChange={setDeleteAccountOpen}
+        title="Permanently Delete Account?"
+        description="This action cannot be undone. All your personal data, transaction history, categories, budgets, and travel plans will be permanently purged from the database."
+        onConfirm={handleDeleteAccount}
+        isLoading={isDeleting}
+      />
     </AppShell>
   );
 }

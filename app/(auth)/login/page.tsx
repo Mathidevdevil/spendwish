@@ -165,14 +165,14 @@ function LoginForm() {
 
   return (
     <div className="space-y-4">
-      {/* 1-Click Access Options: Demo with sample data OR Clean empty workspace */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      {/* 1-Click Access Options: Clean full-width stacked pair */}
+      <div className="flex flex-col gap-2.5">
         <Button
           type="button"
           variant="outline"
           onClick={() => handleDemoLogin("demo@spendwise.app", "Aarav Sharma")}
           disabled={demoLoading || loading}
-          className="h-11 border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm text-xs"
+          className="w-full h-11 border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-medium rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm text-sm"
         >
           {demoLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
@@ -189,7 +189,7 @@ function LoginForm() {
           variant="outline"
           onClick={() => handleDemoLogin("newuser@spendwise.app", "New User")}
           disabled={demoLoading || loading}
-          className="h-11 border-border bg-card hover:bg-accent text-foreground font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-sm text-xs"
+          className="w-full h-11 border-border bg-card hover:bg-accent text-foreground font-medium rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm text-sm"
         >
           {demoLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-foreground" />

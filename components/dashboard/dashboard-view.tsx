@@ -100,7 +100,12 @@ export function DashboardView() {
       <SummaryCards summary={summary} isLoading={isLoading} />
 
       {/* AI Financial Insights Widget */}
-      <AiInsightsCard month={selectedMonth} year={selectedYear} />
+      <AiInsightsCard
+        month={selectedMonth}
+        year={selectedYear}
+        summary={summary}
+        isSummaryLoading={isLoading}
+      />
 
       {/* Charts Grid: Donut + 6-Month Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

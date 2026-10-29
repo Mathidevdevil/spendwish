@@ -8,6 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        default:
+          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         DEFAULT:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive:
@@ -22,6 +24,7 @@ const buttonVariants = cva(
           "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600",
       },
       size: {
+        default: "h-10 px-4 py-2",
         DEFAULT: "h-10 px-4 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-11 rounded-lg px-8 text-base",
@@ -29,8 +32,8 @@ const buttonVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "DEFAULT",
-      size: "DEFAULT",
+      variant: "default",
+      size: "default",
     },
   }
 );

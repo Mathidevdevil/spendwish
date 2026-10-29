@@ -89,7 +89,25 @@ export async function POST(request: Request) {
     let summary: any;
     let categories: any[] = [];
 
-    if (user.id === DEMO_USER_ID) {
+    // If client supplied verified aggregate metrics from dashboard cards, prioritize them for exact consistency
+    const clientIncome = Number(body?.total_income);
+    const clientExpense = Number(body?.total_expense);
+    const hasClientNumbers = !isNaN(clientIncome) && !isNaN(clientExpense);
+
+    if (hasClientNumbers) {
+      const clientNet = Number(body?.net_savings);
+      const clientRate = Number(body?.savings_rate);
+      summary = {
+        total_income: clientIncome,
+        total_expense: clientExpense,
+        net_savings: !isNaN(clientNet) ? clientNet : clientIncome - clientExpense,
+        savings_rate: !isNaN(clientRate)
+          ? clientRate
+          : clientIncome > 0
+          ? Math.max(0, ((clientIncome - clientExpense) / clientIncome) * 100)
+          : 0,
+      };
+    } else if (user.id === DEMO_USER_ID) {
       const demoSum = demoStore.getDashboardSummary(month, year);
       summary = demoSum;
       const demoCats = demoStore.getCategoryBreakdown(month, year);
@@ -122,6 +140,19 @@ export async function POST(request: Request) {
       };
 
       categories = (categoryData || []).slice(0, 3);
+    }
+
+    // Zero-data guard: Never output fictional numbers when user has no transactions
+    if (Number(summary.total_income) === 0 && Number(summary.total_expense) === 0) {
+      return NextResponse.json({
+        summary:
+          "No transactions have been recorded for this month yet. Start tracking your income and expenses to unlock AI-powered financial advice and savings analysis.",
+        suggestions: [
+          "Record your monthly income or salary to establish your baseline cash flow.",
+          "Track daily expenses with payment methods (Cash, UPI, Card) to see category distributions.",
+          "Set up monthly budgets for key categories like Food and Rent to monitor limit thresholds.",
+        ],
+      });
     }
     const topCat = categories[0]?.category_name;
 
